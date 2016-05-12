@@ -66,6 +66,8 @@ for trl = 1:n_trials
 %% PsychtToolbox - closing instances and clearing buffers
 
 
+%% foo foo foo
+
 
 
 %% allocating relevant data to Structure
