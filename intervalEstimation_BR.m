@@ -39,8 +39,8 @@ n_trials = 10;
 %% Time intervals definitions
 pre_stim_dist = 1.000; % Let us use a gaussion distribution around the mean
 
-short_time_def = [.500 .850]; %ms
-long_time_def = [.850 1.200]; %ms
+short_time_def = [.500 .850]; %seconds
+long_time_def = [.850 1.200]; %seconds
 
 if islong
    curr_time_dist =  long_time_def;
@@ -110,7 +110,7 @@ Screen('Flip', window);
 %% Trial starts
 
 for trl = 1:n_trials
-    curr_pre_stim = pre_stim_dist + 100*randn(1);
+    curr_pre_stim = pre_stim_dist + .100*randn(1);
     curr_time = curr_time_dist(1) + (curr_time_dist(2)-curr_time_dist(1))*rand(1);
  
     %% Auditory Block
@@ -124,7 +124,7 @@ for trl = 1:n_trials
         %wait from trial start
         WaitSecs(curr_pre_stim);
         
-        curr_estimate = curr_time_dist(1) + (curr_time_dist(2)-curr_time_dist(1))*rand(1); %fake data!!!
+        
         
         dotColor = [1 0 0];
         dotXpos = rand * screenXpixels;
@@ -136,12 +136,17 @@ for trl = 1:n_trials
         %Wait between stimuli
         WaitSecs(curr_time);
         
-        dotColor2 = [0 2 0];
+        dotColor2 = [1 1 0];
         Screen('DrawDots', window, [dotXpos dotYpos], dotSizePix, dotColor2, [], 2);
         Screen('Flip', window);
         
         %wait for Keystroke
-        [a,b,curr_delta_secs]=KbWait;
+        [a,b,c]=KbWait;
+        curr_estimate = curr_time_dist(1) + (curr_time_dist(2)-curr_time_dist(1))*rand(1); %fake data!!!
+        
+        dotColor2 = [0 1 0];
+        Screen('DrawDots', window, [dotXpos dotYpos], dotSizePix, dotColor2, [], 2);
+        Screen('Flip', window);
     end
     
 %% allocating relevant data to Structure
@@ -150,7 +155,6 @@ data.pre_stim(trl) = curr_pre_stim;
 data.time(trl) = curr_time;
 data.estimate(trl) = curr_estimate;
 data.time_dist = curr_time_dist;
-
 
 
 %% Trial end
