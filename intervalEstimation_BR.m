@@ -69,7 +69,9 @@ for trl = 1:n_trials
 
 
 %% allocating relevant data to Structure
-data.estimate = zeros()
+data.estimate = zeros(n_trials,1);
+data.pre_stim = zeros(n_trials,1);
+data.time = zeros(n_trials,1);
 
 data.pre_stim(trl) = curr_pre_stim;
 data.time(trl) = curr_time;
