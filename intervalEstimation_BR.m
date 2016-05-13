@@ -33,7 +33,7 @@ else
     error('Time Interval Distribution unknown, the program only has Short and Long distributions.')
 end
 
-n_trials = 2;
+n_trials = 5;
 
 
 %% Time intervals definitions
@@ -103,7 +103,7 @@ KbWait;
 
 
 %% Trial starts
-
+KbQueueCreate; % initialize the queue to get accurate timings
 for trl = 1:n_trials
     curr_pre_stim = pre_stim_dist + .100*randn(1);
     curr_time = curr_time_dist(1) + (curr_time_dist(2)-curr_time_dist(1))*rand(1);
@@ -113,10 +113,31 @@ for trl = 1:n_trials
     Screen('Flip', window);
     
     KbWait; 
-
+    
     %% Auditory Block
     if ~isvisual
-        9000+1
+        %wait from trial start
+        WaitSecs(curr_pre_stim);
+        
+        %play ready sound
+        
+        %Wait between stimuli
+        WaitSecs(curr_time);
+        
+        %play set sound
+        
+        curr_estimate = curr_time_dist(1) + (curr_time_dist(2)-curr_time_dist(1))*rand(1); %fake data!!!
+        
+        curr_time_dif = curr_estimate - curr_time;
+        if curr_time_dif>.05 || curr_time_dif <-.05
+            freq_w = 48000;  % WRONG - 50ms error
+        else
+            freq_c = 4000;  % CORRECT
+        end
+        
+        %play feedback soudn
+        
+        WaitSecs(0.5);
     end
     
     %% Visual Block
@@ -142,17 +163,22 @@ for trl = 1:n_trials
         Screen('FillRect', window, rectColor, centeredRect);
         Screen('Flip', window);
         
+        %Time reference
+        stim_presentation_time=GetSecs;
+        KbQueueStart;
+
         %wait for Keystroke
-        [a,b,c]=KbWait;
-        curr_estimate = curr_time_dist(1) + (curr_time_dist(2)-curr_time_dist(1))*rand(1); %fake data!!!
+        curr_time=KbQueueWait;
         
-        curr_time_dif = curr_estimate - curr_time;
-        if curr_time_dif>.05 || curr_time_dif <-.05
+%         curr_estimate = curr_time_dist(1) + (curr_time_dist(2)-curr_time_dist(1))*rand(1); %fake data!!!
+        
+        curr_estimate = curr_time - stim_presentation_time;
+        if curr_estimate>.05 || curr_estimate <-.05
             dotColor = [1 0 0];  % WRONG - 50ms error
         else
             dotColor = [0 0 0];  % CORRECT
         end
-
+        
         Screen('FillOval', window, dotColor, baseRect );
         Screen('Flip', window);
         
@@ -162,13 +188,14 @@ for trl = 1:n_trials
 %% allocating relevant data to Structure
 
 data.pre_stim(trl) = curr_pre_stim;
-data.time(trl) = curr_time;
+data.time(trl) = curr_time; %absolute time in session
 data.estimate(trl) = curr_estimate;
 data.time_dist = curr_time_dist;
-data.time_dif(trl) = curr_time_dif;
+
 
 %% Trial end
 end
+KbQueueRelease; %Clear out the queue stuff
 %% PsychtToolbox - closing instances and clearing buffers
 
 Screen('CloseAll');
