@@ -44,7 +44,7 @@ pre_stim_dist = 1.000; % Let us use a gaussion distribution around the mean
 
 short_time_def = .45:.05 :.90; %seconds
 long_time_def = .80:0.05: 1.250; %seconds
-
+cumprob = 0:.1:1;
 if islong
     curr_time_dist =  long_time_def;
 elseif ~islong
@@ -108,7 +108,7 @@ if isvisual
     line4 = '\n\n\n You will start each trial by pressing any key.';
     line5 = '\n\n\n After a random time interval, the Ready Stimulus (blue square) will be presented.';
     line6 = '\n\n\n After the another random tive interval the Set Stimulus (yellow square) will be shown.';
-    line7 = '\n\n\n Your task is to replicate the time interval between the Ready and the Set Stimulus by'; 
+    line7 = '\n\n\n Your task is to replicate the time interval between the Ready and the Set Stimulus by';
     line8 = '\n\n pressing any key after what you think was the time that passed.';
     line9 = '\n\n\n You will be provided feedback on wether your estimation was close enought to the actual time interval.';
     line10 = '\n\n\n A green circle means you were very close, whilst a red circle means you were not good.';
@@ -121,7 +121,7 @@ if isvisual
     
 else  %If Auditory
     
-        % Initialize Sounddriver
+    % Initialize Sounddriver
     InitializePsychSound(1);
     % Number of channels and Frequency of the sound
     nrchannels = 2;
@@ -156,7 +156,7 @@ else  %If Auditory
     line7 = '\n\n\n You will be provided feedback on wether your estimation was close enought to the actual time interval.';
     line8 = '\n\n\n A high pitched sound means you were very close; (press any key to hear it)';
     line9 = '\n\n A low pitch means you were not good. (press any key to hear it)';
-
+    
     Screen('TextSize', window, 25 );
     DrawFormattedText(window, [line1 line2 line3 line4 line5 line6 line7 line8 line9 Endline],...
         'center', screenYpixels * 0.25, white);
@@ -166,7 +166,7 @@ else  %If Auditory
     
     PsychPortAudio('FillBuffer', pahandle, [incorrectBeep; incorrectBeep]);
     PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
-      
+    
     KbWait;
     
     PsychPortAudio('FillBuffer', pahandle, [correctBeep; correctBeep]);
@@ -187,8 +187,13 @@ KbQueueCreate; % initialize the queue to get accurate timings
 for trl = 1:n_trials
     curr_pre_stim = pre_stim_dist + .100*randn(1);
     
-    
-%     curr_time = curr_time_dist(1) + (curr_time_dist(2)-curr_time_dist(1))*rand(1);
+    rand_val = rand;
+    for i=1:10
+        if rand_val>cumprob(i) &&  rand_val <=cumprob(i+1)
+            current_value=i;
+        end
+    end   
+    curr_time = curr_time_dist(current_value);
     
     Screen('DrawLines', window, allCoords,...
         lineWidthPix, white, [xCenter yCenter], 2);
@@ -204,7 +209,7 @@ for trl = 1:n_trials
         %%%%play ready sound
         PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
         %Wait between stimuli
-
+        
         WaitSecs(curr_time);
         PsychPortAudio('FillBuffer', pahandle, [cueBeep; cueBeep]);
         %%%%%play set sound
@@ -216,7 +221,7 @@ for trl = 1:n_trials
         
         %wait for Keystroke
         curr_time_dif=KbQueueWait;
- 
+        
         curr_estimate = curr_time_dif - stim_presentation_time;
         
         if abs(curr_estimate-curr_time) > error_threshold
@@ -241,11 +246,11 @@ for trl = 1:n_trials
         baseRect = [xCenter-100 yCenter-100 xCenter+100 yCenter+100];
         centeredRect = CenterRectOnPointd(baseRect, xCenter, yCenter);
         
-
+        
         Screen('FillRect', window, rectColor, centeredRect);
-
+        
         Screen('Flip', window);
-  
+        
         %Wait between stimuli
         WaitSecs(curr_time);
         
@@ -262,7 +267,7 @@ for trl = 1:n_trials
         
         %wait for Keystroke
         curr_time_dif=KbQueueWait;
-                
+        
         curr_estimate = curr_time_dif - stim_presentation_time;
         
         if abs(curr_estimate-curr_time) > error_threshold
@@ -290,7 +295,7 @@ end
 KbQueueRelease; %Clear out the queue stuff
 
 if ~isvisual
-% Close the audio device
+    % Close the audio device
     PsychPortAudio('Close', pahandle);
 end
 %% PsychtToolbox - closing instances and clearing buffers
