@@ -33,7 +33,7 @@ else
     error('Time Interval Distribution unknown, the program only has Short and Long distributions.')
 end
 
-n_trials = 10;
+n_trials = 2;
 
 
 %% Time intervals definitions
@@ -52,7 +52,6 @@ end
 data.estimate = zeros(n_trials,1);
 data.pre_stim = zeros(n_trials,1);
 data.time = zeros(n_trials,1);
-
 
 
 %% PsychToolbox initializations
@@ -101,11 +100,7 @@ KbWait;
 
 % Draw the fixation cross in white, set it to the center of our screen and
 % set good quality antialiasing
-Screen('DrawLines', window, allCoords,...
-    lineWidthPix, white, [xCenter yCenter], 2);
 
-% Flip to the screen
-Screen('Flip', window);
 
 %% Trial starts
 
@@ -113,9 +108,15 @@ for trl = 1:n_trials
     curr_pre_stim = pre_stim_dist + .100*randn(1);
     curr_time = curr_time_dist(1) + (curr_time_dist(2)-curr_time_dist(1))*rand(1);
  
+    Screen('DrawLines', window, allCoords,...
+    lineWidthPix, white, [xCenter yCenter], 2);
+    Screen('Flip', window);
+    
+    KbWait; 
+
     %% Auditory Block
     if ~isvisual
-        
+        9000+1
     end
     
     %% Visual Block
@@ -123,30 +124,39 @@ for trl = 1:n_trials
         
         %wait from trial start
         WaitSecs(curr_pre_stim);
+                
+        rectColor = [0 0 1];       
+        baseRect = [xCenter-100 yCenter-100 xCenter+100 yCenter+100];
+        centeredRect = CenterRectOnPointd(baseRect, xCenter, yCenter);
         
-        
-        
-        dotColor = [1 0 0];
-        dotXpos = rand * screenXpixels;
-        dotYpos = rand * screenYpixels;
-        dotSizePix = 20;
-        Screen('DrawDots', window, [dotXpos dotYpos], dotSizePix, dotColor, [], 2);
+        Screen('FillRect', window, rectColor, centeredRect);
         Screen('Flip', window);
         
         %Wait between stimuli
         WaitSecs(curr_time);
         
-        dotColor2 = [1 1 0];
-        Screen('DrawDots', window, [dotXpos dotYpos], dotSizePix, dotColor2, [], 2);
+        rectColor = [1 1 0];
+        baseRect = [xCenter-100 yCenter-100 xCenter+100 yCenter+100];
+        centeredRect = CenterRectOnPointd(baseRect, xCenter, yCenter);
+
+        Screen('FillRect', window, rectColor, centeredRect);
         Screen('Flip', window);
         
         %wait for Keystroke
         [a,b,c]=KbWait;
         curr_estimate = curr_time_dist(1) + (curr_time_dist(2)-curr_time_dist(1))*rand(1); %fake data!!!
         
-        dotColor2 = [0 1 0];
-        Screen('DrawDots', window, [dotXpos dotYpos], dotSizePix, dotColor2, [], 2);
+        curr_time_dif = curr_estimate - curr_time;
+        if curr_time_dif>.05 || curr_time_dif <-.05
+            dotColor = [1 0 0];  % WRONG - 50ms error
+        else
+            dotColor = [0 0 0];  % CORRECT
+        end
+
+        Screen('FillOval', window, dotColor, baseRect );
         Screen('Flip', window);
+        
+        WaitSecs(0.5);
     end
     
 %% allocating relevant data to Structure
@@ -155,7 +165,7 @@ data.pre_stim(trl) = curr_pre_stim;
 data.time(trl) = curr_time;
 data.estimate(trl) = curr_estimate;
 data.time_dist = curr_time_dist;
-
+data.time_dif(trl) = curr_time_dif;
 
 %% Trial end
 end
