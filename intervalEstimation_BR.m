@@ -51,7 +51,7 @@ elseif ~islong
     curr_time_dist =  short_time_def;
 end
 
-error_threshold=.05;  %50 ms!
+
 %% variable initialization
 data.estimate = zeros(n_trials,1);
 data.pre_stim = zeros(n_trials,1);
@@ -194,7 +194,9 @@ for trl = 1:n_trials
         end
     end   
     curr_time = curr_time_dist(current_value);
-    
+
+    error_threshold=(0.1*curr_time);  %10% of the stimulus interval
+        
     Screen('DrawLines', window, allCoords,...
         lineWidthPix, white, [xCenter yCenter], 2);
     Screen('Flip', window);
