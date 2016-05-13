@@ -51,7 +51,7 @@ elseif ~islong
     curr_time_dist =  short_time_def;
 end
 
-error_threshold=.05;  %50 ms!
+
 %% variable initialization
 data.estimate = zeros(n_trials,1);
 data.pre_stim = zeros(n_trials,1);
@@ -186,7 +186,7 @@ KbQueueCreate; % initialize the queue to get accurate timings
 
 for trl = 1:n_trials
     curr_pre_stim = pre_stim_dist + .100*randn(1);
-    
+    error_threshold=(0.1*curr_time);  %10% of the stimulus interval
     
 %     curr_time = curr_time_dist(1) + (curr_time_dist(2)-curr_time_dist(1))*rand(1);
     
