@@ -1,4 +1,4 @@
-function data = intervalEstimation_BR(modality, interval_type,test_subject, save_flag)
+function data = intervalEstimation_BR(modality, interval_type,test_subject, n_trials, save_flag)
 %% Help
 % modality='auditory' or 'visual';  defines what modality the task will
 % run.
@@ -33,7 +33,7 @@ else
     error('Time Interval Distribution unknown, the program only has Short and Long distributions.')
 end
 
-n_trials = 5;
+% n_trials = 2;
 
 
 %% Time intervals definitions
@@ -43,11 +43,12 @@ short_time_def = [.500 .850]; %seconds
 long_time_def = [.850 1.200]; %seconds
 
 if islong
-   curr_time_dist =  long_time_def;
+    curr_time_dist =  long_time_def;
 elseif ~islong
-   curr_time_dist =  short_time_def;
+    curr_time_dist =  short_time_def;
 end
 
+error_threshold=.05;  %50 ms!
 %% variable initialization
 data.estimate = zeros(n_trials,1);
 data.pre_stim = zeros(n_trials,1);
@@ -107,35 +108,41 @@ KbQueueCreate; % initialize the queue to get accurate timings
 for trl = 1:n_trials
     curr_pre_stim = pre_stim_dist + .100*randn(1);
     curr_time = curr_time_dist(1) + (curr_time_dist(2)-curr_time_dist(1))*rand(1);
- 
+    
     Screen('DrawLines', window, allCoords,...
-    lineWidthPix, white, [xCenter yCenter], 2);
+        lineWidthPix, white, [xCenter yCenter], 2);
     Screen('Flip', window);
     
-    KbWait; 
+    KbQueueWait;
     
     %% Auditory Block
     if ~isvisual
         %wait from trial start
         WaitSecs(curr_pre_stim);
         
-        %play ready sound
+        %%%%play ready sound
         
         %Wait between stimuli
         WaitSecs(curr_time);
         
-        %play set sound
+        %%%%%play set sound
         
-        curr_estimate = curr_time_dist(1) + (curr_time_dist(2)-curr_time_dist(1))*rand(1); %fake data!!!
+        %Time reference
+        stim_presentation_time=GetSecs;
+        KbQueueStart;
         
-        curr_time_dif = curr_estimate - curr_time;
-        if curr_time_dif>.05 || curr_time_dif <-.05
-            freq_w = 48000;  % WRONG - 50ms error
+        %wait for Keystroke
+        curr_time_dif=KbQueueWait;
+                
+        curr_estimate = curr_time_dif - stim_presentation_time;
+        
+        if abs(curr_estimate-curr_time) > error_threshold
+            freq_wrong=40000;  % WRONG - 50ms error
         else
-            freq_c = 4000;  % CORRECT
+            freq_correct=20000;  % CORRECT
         end
         
-        %play feedback soudn
+        %%%%%play feedback soudn
         
         WaitSecs(0.5);
     end
@@ -145,8 +152,8 @@ for trl = 1:n_trials
         
         %wait from trial start
         WaitSecs(curr_pre_stim);
-                
-        rectColor = [0 0 1];       
+        
+        rectColor = [0 0 1];
         baseRect = [xCenter-100 yCenter-100 xCenter+100 yCenter+100];
         centeredRect = CenterRectOnPointd(baseRect, xCenter, yCenter);
         
@@ -159,24 +166,23 @@ for trl = 1:n_trials
         rectColor = [1 1 0];
         baseRect = [xCenter-100 yCenter-100 xCenter+100 yCenter+100];
         centeredRect = CenterRectOnPointd(baseRect, xCenter, yCenter);
-
+        
         Screen('FillRect', window, rectColor, centeredRect);
         Screen('Flip', window);
         
         %Time reference
         stim_presentation_time=GetSecs;
         KbQueueStart;
-
+        
         %wait for Keystroke
-        curr_time=KbQueueWait;
+        curr_time_dif=KbQueueWait;
+                
+        curr_estimate = curr_time_dif - stim_presentation_time;
         
-%         curr_estimate = curr_time_dist(1) + (curr_time_dist(2)-curr_time_dist(1))*rand(1); %fake data!!!
-        
-        curr_estimate = curr_time - stim_presentation_time;
-        if curr_estimate>.05 || curr_estimate <-.05
+        if abs(curr_estimate-curr_time) > error_threshold
             dotColor = [1 0 0];  % WRONG - 50ms error
         else
-            dotColor = [0 0 0];  % CORRECT
+            dotColor = [1 1 1];  % CORRECT
         end
         
         Screen('FillOval', window, dotColor, baseRect );
@@ -185,15 +191,15 @@ for trl = 1:n_trials
         WaitSecs(0.5);
     end
     
-%% allocating relevant data to Structure
-
-data.pre_stim(trl) = curr_pre_stim;
-data.time(trl) = curr_time; %absolute time in session
-data.estimate(trl) = curr_estimate;
-data.time_dist = curr_time_dist;
-
-
-%% Trial end
+    %% allocating relevant data to Structure
+    
+    data.pre_stim(trl) = curr_pre_stim;
+    data.trial_time(trl) = curr_time;
+    data.estimate(trl) = curr_estimate;
+    data.time_dist = curr_time_dist;
+    
+    
+    %% Trial end
 end
 KbQueueRelease; %Clear out the queue stuff
 %% PsychtToolbox - closing instances and clearing buffers
