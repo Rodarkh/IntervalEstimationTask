@@ -151,26 +151,27 @@ else  %If Auditory
     line2 = '\n\n\n Welcome to our Time Interval Estimation Task - Auditory modality. ';
     line3 = '\n\n\n A white fixation cross will be displayed in the center of the screen.';
     line4 = '\n\n\n You will start each trial by pressing any key.';
-    line4 = '\n\n\n After a random time interval, the Ready Stimulus (low frequency tone) will be played.';
-    line5 = '\n\n\n After the another random tive interval the Set Stimulus (higher frequency tone) will be shown.';
-    line6 = '\n\n\n Your task is to replicate the time interval between the Ready and the Set Stimulus by pressing any key after what you think was the time that passed.';
-    line7 = '\n\n\n You will be provided feedback on wether your estimation was close enought to the actual time interval.';
-    line8 = '\n\n\n A high pitched sound means you were very close; (press any key to hear it)';
-    line9 = '\n\n A low pitch means you were not good. (press any key to hear it)';
+    line5 = '\n\n\n After a random time interval, the Ready Stimulus (low frequency tone) will be played.';
+    line6 = '\n\n\n After the another random tive interval the Set Stimulus (higher frequency tone) will be shown.';
+    line7 = '\n\n\n Your task is to replicate the time interval between the Ready and the Set Stimulus by ';
+    line8 = '\n\n pressing any key after what you think was the time that passed.';
+    line9 = '\n\n\n You will be provided feedback on wether your estimation was close enought to the actual time interval.';
+    line10 = '\n\n\n A high pitched sound means you were very close; ';
+    line11 = '\n\n A low pitch means you were not good. (press any key to hear both)';
     
     Screen('TextSize', window, 20 );
-    DrawFormattedText(window, [line1 line2 line3 line4 line5 line6 line7 line8 line9],...
+    DrawFormattedText(window, [line1 line2 line3 line4 line5 line6 line7 line8 line9 line10 line11],...
         'center', screenYpixels * 0.10, white);
     Screen('Flip', window);
     
     KbWait;
     
-    PsychPortAudio('FillBuffer', pahandle, [incorrectBeep; incorrectBeep]);
+    PsychPortAudio('FillBuffer', pahandle, [correctBeep; correctBeep]);
     PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
     
-    KbWait;
+    WaitSecs(1)
     
-    PsychPortAudio('FillBuffer', pahandle, [correctBeep; correctBeep]);
+    PsychPortAudio('FillBuffer', pahandle, [incorrectBeep; incorrectBeep]);
     PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
     
     WaitSecs(1)
@@ -211,10 +212,9 @@ for trl = 1:n_trials
         %clean the que for and premature key hitters
         if check
             KbQueueFlush;
-        end        
+        end   
         %wait from trial start
         WaitSecs(curr_pre_stim);
-
         PsychPortAudio('FillBuffer', pahandle, [startBeep; startBeep]);
         %%%%play ready sound
         PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
@@ -248,7 +248,11 @@ for trl = 1:n_trials
     
     %% Visual Block
     if isvisual
-        
+        [check]=KbQueueCheck;
+        %clean the que for and premature key hitters
+        if check
+            KbQueueFlush;
+        end   
         %wait from trial start
         WaitSecs(curr_pre_stim);
         
