@@ -1,4 +1,6 @@
+
 function data = intervalEstimation_BR(modality, interval_type,test_subject, n_trials, save_flag)
+
 %% Help
 % modality='auditory' or 'visual';  defines what modality the task will
 % run.
@@ -36,6 +38,7 @@ end
 % n_trials = 2;
 
 
+
 %% Time intervals definitions
 pre_stim_dist = 1.000; % Let us use a gaussion distribution around the mean
 
@@ -48,7 +51,7 @@ elseif ~islong
     curr_time_dist =  short_time_def;
 end
 
-error_threshold=.05;  %50 ms!
+error_threshold=.2;  %50 ms!
 %% variable initialization
 data.estimate = zeros(n_trials,1);
 data.pre_stim = zeros(n_trials,1);
@@ -104,7 +107,38 @@ KbWait;
 
 
 %% Trial starts
-KbQueueCreate; % initialize the queue to get accurate timings
+
+    KbQueueCreate; % initialize the queue to get accurate timings
+
+
+if ~isvisual
+    % Initialize Sounddriver
+    InitializePsychSound(1);
+    % Number of channels and Frequency of the sound
+    nrchannels = 2;
+    freq = 44000;
+    % How many times to we wish to play the sound
+    repetitions = 1;
+    % Length of the beep
+    beepLengthSecs = 0.1;
+    % Length of the pause between beeps
+    beepPauseTime = 1;
+    % Start immediately (0 = immediately)
+    startCue = 0;
+    % Should we wait for the device to really start (1 = yes)
+    waitForDeviceStart = 1;
+    pahandle = PsychPortAudio('Open', [], 1, 1, freq, nrchannels);
+    
+    PsychPortAudio('Volume', pahandle, 0.5);
+    %diff tones
+    
+    startBeep = MakeBeep(450, beepLengthSecs, freq);
+    cueBeep = MakeBeep(600,beepLengthSecs, freq);
+    correctBeep = MakeBeep(900,beepLengthSecs, freq);
+    incorrectBeep = MakeBeep(200,beepLengthSecs, freq);
+
+end
+
 for trl = 1:n_trials
     curr_pre_stim = pre_stim_dist + .100*randn(1);
     curr_time = curr_time_dist(1) + (curr_time_dist(2)-curr_time_dist(1))*rand(1);
@@ -119,13 +153,15 @@ for trl = 1:n_trials
     if ~isvisual
         %wait from trial start
         WaitSecs(curr_pre_stim);
-        
+        PsychPortAudio('FillBuffer', pahandle, [startBeep; startBeep]);
         %%%%play ready sound
-        
+        PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
         %Wait between stimuli
+
         WaitSecs(curr_time);
-        
+        PsychPortAudio('FillBuffer', pahandle, [cueBeep; cueBeep]);
         %%%%%play set sound
+        PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
         
         %Time reference
         stim_presentation_time=GetSecs;
@@ -133,13 +169,15 @@ for trl = 1:n_trials
         
         %wait for Keystroke
         curr_time_dif=KbQueueWait;
-                
+                %fooooooooooo
         curr_estimate = curr_time_dif - stim_presentation_time;
         
         if abs(curr_estimate-curr_time) > error_threshold
-            freq_wrong=40000;  % WRONG - 50ms error
+            PsychPortAudio('FillBuffer', pahandle, [incorrectBeep; incorrectBeep]);
+            PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
         else
-            freq_correct=20000;  % CORRECT
+            PsychPortAudio('FillBuffer', pahandle, [correctBeep; correctBeep]);
+            PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
         end
         
         %%%%%play feedback soudn
@@ -157,9 +195,11 @@ for trl = 1:n_trials
         baseRect = [xCenter-100 yCenter-100 xCenter+100 yCenter+100];
         centeredRect = CenterRectOnPointd(baseRect, xCenter, yCenter);
         
+
         Screen('FillRect', window, rectColor, centeredRect);
+
         Screen('Flip', window);
-        
+  
         %Wait between stimuli
         WaitSecs(curr_time);
         
@@ -202,6 +242,9 @@ for trl = 1:n_trials
     %% Trial end
 end
 KbQueueRelease; %Clear out the queue stuff
+
+% Close the audio device
+PsychPortAudio('Close', pahandle);
 %% PsychtToolbox - closing instances and clearing buffers
 
 Screen('CloseAll');
