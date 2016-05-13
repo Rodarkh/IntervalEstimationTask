@@ -143,8 +143,8 @@ else  %If Auditory
     
     startBeep = MakeBeep(450, beepLengthSecs, freq);
     cueBeep = MakeBeep(600,beepLengthSecs, freq);
-    correctBeep = MakeBeep(900,beepLengthSecs, freq);
-    incorrectBeep = MakeBeep(200,beepLengthSecs, freq);
+    correctBeep = MakeBeep(750,beepLengthSecs, freq);
+    incorrectBeep = MakeBeep(300,beepLengthSecs, freq);
     
     % Instructions
     line1 = 'Hello Subject';
