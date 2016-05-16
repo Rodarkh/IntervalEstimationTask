@@ -233,14 +233,22 @@ for trl = 1:n_trials
         curr_time_dif=KbQueueWait;
         
         curr_estimate = curr_time_dif - stim_presentation_time;
-        
-        if abs(curr_estimate-curr_time) > error_threshold
+        curr_abs_err = abs(curr_estimate-curr_time);
+
+        if curr_abs_err > error_threshold
             PsychPortAudio('FillBuffer', pahandle, [incorrectBeep; incorrectBeep]);
             PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
+            dotColor = [1 0 0];  % WRONG > 10% error
         else
             PsychPortAudio('FillBuffer', pahandle, [correctBeep; correctBeep]);
             PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
+            dotColor = [1 1 1];  % CORRECT            
         end
+        
+        scale_factor=500;
+        baseRect_err = [xCenter-curr_abs_err*scale_factor yCenter-curr_abs_err*scale_factor xCenter+curr_abs_err*scale_factor yCenter+curr_abs_err*scale_factor];
+        Screen('FillOval', window, dotColor, baseRect_err );
+        Screen('Flip', window);        
         
         %%%%%play feedback sound
         WaitSecs(0.5);
@@ -287,16 +295,18 @@ for trl = 1:n_trials
         
         
         if curr_abs_err > error_threshold
-            dotColor = [1 0 0];  % WRONG - 50ms error
+            dotColor = [1 0 0];  % WRONG - 10% error
         else
             dotColor = [1 1 1];  % CORRECT
         end
         
         
-        curr_sq_err=(curr_estimate-curr_time)^2;
-        scale_factor=1/100;
-        curr_sq_err*scale_factor
-        baseRect_err = [xCenter-curr_sq_err*scale_factor yCenter-curr_sq_err*scale_factor xCenter+curr_sq_err*scale_factor yCenter+curr_sq_err*scale_factor];
+        scale_factor=500;
+        
+%         [ curr_abs_err    curr_abs_err*scale_factor]
+        
+        baseRect_err = [xCenter-curr_abs_err*scale_factor yCenter-curr_abs_err*scale_factor xCenter+curr_abs_err*scale_factor yCenter+curr_abs_err*scale_factor];
+
         Screen('FillOval', window, dotColor, baseRect_err );
         Screen('Flip', window);
         
