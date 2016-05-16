@@ -283,14 +283,21 @@ for trl = 1:n_trials
         curr_time_dif=KbQueueWait;
         
         curr_estimate = curr_time_dif - stim_presentation_time;
+        curr_abs_err = abs(curr_estimate-curr_time);
         
-        if abs(curr_estimate-curr_time) > error_threshold
+        
+        if curr_abs_err > error_threshold
             dotColor = [1 0 0];  % WRONG - 50ms error
         else
             dotColor = [1 1 1];  % CORRECT
         end
         
-        Screen('FillOval', window, dotColor, baseRect );
+        
+        curr_sq_err=(curr_estimate-curr_time)^2;
+        scale_factor=1/100;
+        curr_sq_err*scale_factor
+        baseRect_err = [xCenter-curr_sq_err*scale_factor yCenter-curr_sq_err*scale_factor xCenter+curr_sq_err*scale_factor yCenter+curr_sq_err*scale_factor];
+        Screen('FillOval', window, dotColor, baseRect_err );
         Screen('Flip', window);
         
         WaitSecs(0.5);
