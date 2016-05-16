@@ -58,6 +58,8 @@ data.pre_stim = zeros(n_trials,1);
 data.time = zeros(n_trials,1);
 data.trial_time = zeros(n_trials,1);
 data.correct=false(n_trials, 1);
+data.abs_err = zeros(n_trials,1);
+data.stim_presentation_time = zeros(n_trials,1);
 
 %% PsychToolbox initializations
 
@@ -189,6 +191,7 @@ KbWait;
 KbQueueCreate; % initialize the queue to get accurate timings
 
 for trl = 1:n_trials
+    stim_presentation_time = GetSecs;
     curr_pre_stim = pre_stim_dist + .100*randn(1);
     
     rand_val = rand;
@@ -209,13 +212,10 @@ for trl = 1:n_trials
     
     %% Auditory Block
     if ~isvisual
-        [check]=KbQueueCheck;
-        %clean the que for and premature key hitters
-        if check
-            KbQueueFlush;
-        end   
         %wait from trial start
         WaitSecs(curr_pre_stim);
+        KbQueueFlush;
+        
         PsychPortAudio('FillBuffer', pahandle, [startBeep; startBeep]);
         %%%%play ready sound
         PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
@@ -244,7 +244,7 @@ for trl = 1:n_trials
             PsychPortAudio('FillBuffer', pahandle, [correctBeep; correctBeep]);
             PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
             dotColor = [1 1 1];  % CORRECT     
-            data.correct(n_trials)= true;
+            data.correct(trl)= true;
         end
         
         scale_factor=500;
@@ -253,19 +253,14 @@ for trl = 1:n_trials
         Screen('Flip', window);        
         
         %%%%%play feedback sound
-        WaitSecs(0.5);
-    end
+        WaitSecs(0.75);   
     
     %% Visual Block
-    if isvisual
-        [check]=KbQueueCheck;
-        %clean the que for and premature key hitters
-        if check
-            KbQueueFlush;
-        end   
+    elseif isvisual
         %wait from trial start
         WaitSecs(curr_pre_stim);
-        
+        KbQueueFlush;
+
         rectColor = [0 0 1];
         baseRect = [xCenter-100 yCenter-100 xCenter+100 yCenter+100];
         centeredRect = CenterRectOnPointd(baseRect, xCenter, yCenter);
@@ -300,6 +295,7 @@ for trl = 1:n_trials
             dotColor = [1 0 0];  % WRONG - 10% error
         else
             dotColor = [1 1 1];  % CORRECT
+            data.correct(trl)= true;
         end
         
         
@@ -312,7 +308,7 @@ for trl = 1:n_trials
         Screen('FillOval', window, dotColor, baseRect_err );
         Screen('Flip', window);
         
-        WaitSecs(0.5);
+        WaitSecs(0.75);
     end
     
     %% allocating relevant data to Structure
@@ -321,6 +317,8 @@ for trl = 1:n_trials
     data.trial_time(trl) = curr_time;
     data.estimate(trl) = curr_estimate;
     data.time_dist = curr_time_dist;
+    data.abs_err(trl)=curr_abs_err;
+    data.stim_presentation_time(trl) = stim_presentation_time;
     
     
     %% Trial end
