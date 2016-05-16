@@ -209,13 +209,14 @@ for trl = 1:n_trials
     
     %% Auditory Block
     if ~isvisual
-        [check]=KbQueueCheck;
+%         [check]=KbQueueCheck;
         %clean the que for and premature key hitters
-        if check
-            KbQueueFlush;
-        end   
+%         if check
+
+%         end   
         %wait from trial start
         WaitSecs(curr_pre_stim);
+        KbQueueFlush;      
         PsychPortAudio('FillBuffer', pahandle, [startBeep; startBeep]);
         %%%%play ready sound
         PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
@@ -265,7 +266,7 @@ for trl = 1:n_trials
         end   
         %wait from trial start
         WaitSecs(curr_pre_stim);
-        
+        KbQueueFlush;  
         rectColor = [0 0 1];
         baseRect = [xCenter-100 yCenter-100 xCenter+100 yCenter+100];
         centeredRect = CenterRectOnPointd(baseRect, xCenter, yCenter);
