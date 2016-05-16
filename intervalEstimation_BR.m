@@ -214,8 +214,8 @@ for trl = 1:n_trials
     if ~isvisual
         %wait from trial start
         WaitSecs(curr_pre_stim);
-        KbQueueFlush;
-        
+        KbQueueFlush;  
+
         PsychPortAudio('FillBuffer', pahandle, [startBeep; startBeep]);
         %%%%play ready sound
         PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
@@ -259,7 +259,7 @@ for trl = 1:n_trials
     elseif isvisual
         %wait from trial start
         WaitSecs(curr_pre_stim);
-        KbQueueFlush;
+        KbQueueFlush;  
 
         rectColor = [0 0 1];
         baseRect = [xCenter-100 yCenter-100 xCenter+100 yCenter+100];
