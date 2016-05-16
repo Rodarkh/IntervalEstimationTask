@@ -114,11 +114,12 @@ if isvisual
     line7 = '\n\n\n Your task is to replicate the time interval between the Ready and the Set Stimulus by';
     line8 = '\n\n pressing any key after what you think was the time that passed.';
     line9 = '\n\n\n You will be provided feedback on wether your estimation was close enought to the actual time interval.';
-    line10 = '\n\n\n A green circle means you were very close, whilst a red circle means you were not good.';
+    line10 = '\n\n\n A white circle means you were correct, whilst a red circle means you were not good.';
+    line11 = '\n\n The diammeter of the circle is proportional to the absolute time difference of your estimate.';
     
     Endline = '\n\n\n\n Press any key to begin the session. Press again to start each trial.';
     Screen('TextSize', window, 20 );
-    DrawFormattedText(window, [line1 line2 line3 line4 line5 line6 line7 line8 line9 line10 Endline],...
+    DrawFormattedText(window, [line1 line2 line3 line4 line5 line6 line7 line8 line9 line10 line11 Endline],...
         'center', screenYpixels * 0.1, white);
     Screen('Flip', window);
     
@@ -161,6 +162,9 @@ else  %If Auditory
     line9 = '\n\n\n You will be provided feedback on wether your estimation was close enought to the actual time interval.';
     line10 = '\n\n\n A high pitched sound means you were very close; ';
     line11 = '\n\n A low pitch means you were not good. (press any key to hear both)';
+
+    
+
     
     Screen('TextSize', window, 20 );
     DrawFormattedText(window, [line1 line2 line3 line4 line5 line6 line7 line8 line9 line10 line11],...
@@ -179,9 +183,12 @@ else  %If Auditory
     
     WaitSecs(1)
     
+    line12 = '\n\n\n You will also be given visual feedback.';
+    line13 = '\n\n\n A white circle means you were correct, whilst a red circle means you were not good.';
+    line14 = '\n\n The diammeter of the circle is proportional to the absolute time difference of your estimate.';
     Endline = '\n\n\n\n Press any key to begin the session. Press again to start each trial.';
     Screen('TextSize', window, 25 );
-    DrawFormattedText(window, Endline,...
+    DrawFormattedText(window, [line12 line13 line14 Endline],...
         'center', screenYpixels * 0.25, white);
     Screen('Flip', window);
 end
