@@ -1,5 +1,5 @@
 
-function data = intervalEstimation_BR(modality, interval_type,test_subject, n_trials, save_flag)
+function data = intervalEstimation_BR(modality, interval_type,test_subject, n_trials, save_path, save_flag)
 
 %% Help
 % modality='auditory' or 'visual';  defines what modality the task will
@@ -35,10 +35,6 @@ else
     error('Time Interval Distribution unknown, the program only has Short and Long distributions.')
 end
 
-% n_trials = 2;
-
-
-
 %% Time intervals definitions
 pre_stim_dist = 1.000; % Let us use a gaussion distribution around the mean
 
@@ -50,7 +46,6 @@ if islong
 elseif ~islong
     curr_time_dist =  short_time_def;
 end
-
 
 %% variable initialization
 data.estimate = zeros(n_trials,1);
@@ -68,8 +63,8 @@ PsychDefaultSetup(2);
 % Get the screen numbers
 screens = Screen('Screens');
 % Draw to the external screen if avaliable
-% screenNumber = max(screens);
-screenNumber = 1;
+screenNumber = max(screens);
+% screenNumber = 1;
 
 % Define black and white
 white = WhiteIndex(screenNumber);
@@ -162,9 +157,6 @@ else  %If Auditory
     line9 = '\n\n\n You will be provided feedback on wether your estimation was close enought to the actual time interval.';
     line10 = '\n\n\n A high pitched sound means you were very close; ';
     line11 = '\n\n A low pitch means you were not good. (press any key to hear both)';
-
-    
-
     
     Screen('TextSize', window, 20 );
     DrawFormattedText(window, [line1 line2 line3 line4 line5 line6 line7 line8 line9 line10 line11],...
@@ -176,12 +168,12 @@ else  %If Auditory
     PsychPortAudio('FillBuffer', pahandle, [correctBeep; correctBeep]);
     PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
     
-    WaitSecs(1)
+    WaitSecs(1);
     
     PsychPortAudio('FillBuffer', pahandle, [incorrectBeep; incorrectBeep]);
     PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
     
-    WaitSecs(1)
+    WaitSecs(1);
     
     line12 = '\n\n\n You will also be given visual feedback.';
     line13 = '\n\n\n A white circle means you were correct, whilst a red circle means you were not good.';
