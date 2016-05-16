@@ -57,6 +57,7 @@ data.estimate = zeros(n_trials,1);
 data.pre_stim = zeros(n_trials,1);
 data.time = zeros(n_trials,1);
 data.trial_time = zeros(n_trials,1);
+data.correct=false(n_trials, 1);
 
 %% PsychToolbox initializations
 
@@ -242,7 +243,8 @@ for trl = 1:n_trials
         else
             PsychPortAudio('FillBuffer', pahandle, [correctBeep; correctBeep]);
             PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
-            dotColor = [1 1 1];  % CORRECT            
+            dotColor = [1 1 1];  % CORRECT     
+            data.correct(n_trials)= true;
         end
         
         scale_factor=500;
