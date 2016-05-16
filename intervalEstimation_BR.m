@@ -4,6 +4,7 @@ function data = intervalEstimation_BR(modality, interval_type,test_subject, n_tr
 %% Help
 % modality='auditory' or 'visual';  defines what modality the task will
 % run.
+% data = intervalEstimation_BR('visual','long','rod_test_1',100,'C:\Users\Rodrigo\Documents\INDP2015\Project\DATA',1)
 %% Clear the screen and figures
 close all;
 sca;
@@ -105,10 +106,10 @@ if isvisual
     line3 = '\n\n\n A white fixation cross will be displayed in the center of the screen.';
     line4 = '\n\n\n You will start each trial by pressing any key.';
     line5 = '\n\n\n After a random time interval, the Ready Stimulus (blue square) will be presented.';
-    line6 = '\n\n\n After the another random tive interval the Set Stimulus (yellow square) will be shown.';
+    line6 = '\n\n\n After another random time interval the Set Stimulus (yellow square) will be shown.';
     line7 = '\n\n\n Your task is to replicate the time interval between the Ready and the Set Stimulus by';
     line8 = '\n\n pressing any key after what you think was the time that passed.';
-    line9 = '\n\n\n You will be provided feedback on wether your estimation was close enought to the actual time interval.';
+    line9 = '\n\n\n You will be provided feedback on wether your estimation was close enough to the actual time interval.';
     line10 = '\n\n\n A white circle means you were correct, whilst a red circle means you were not good.';
     line11 = '\n\n The diameter of the circle is proportional to the absolute time difference of your estimate.';
     
@@ -151,10 +152,10 @@ else  %If Auditory
     line3 = '\n\n\n A white fixation cross will be displayed in the center of the screen.';
     line4 = '\n\n\n You will start each trial by pressing any key.';
     line5 = '\n\n\n After a random time interval, the Ready Stimulus (low frequency tone) will be played.';
-    line6 = '\n\n\n After the another random tive interval the Set Stimulus (higher frequency tone) will be shown.';
+    line6 = '\n\n\n After another random time interval the Set Stimulus (higher frequency tone) will be shown.';
     line7 = '\n\n\n Your task is to replicate the time interval between the Ready and the Set Stimulus by ';
     line8 = '\n\n pressing any key after what you think was the time that passed.';
-    line9 = '\n\n\n You will be provided feedback on wether your estimation was close enought to the actual time interval.';
+    line9 = '\n\n\n You will be provided feedback on wether your estimation was close enough to the actual time interval.';
     line10 = '\n\n\n A high pitched sound means you were very close; ';
     line11 = '\n\n A low pitch means you were not good. (press any key to hear both)';
     
@@ -315,15 +316,12 @@ for trl = 1:n_trials
     data.pre_stim(trl) = curr_pre_stim;
     data.trial_time(trl) = curr_time;
     data.estimate(trl) = curr_estimate;
-    data.time_dist = curr_time_dist;
     data.abs_err(trl)=curr_abs_err;
     data.stim_presentation_time(trl) = stim_presentation_time;
-    
     
     %% Trial end
 end
 KbQueueRelease; %Clear out the queue stuff
-
 if ~isvisual
     % Close the audio device
     PsychPortAudio('Close', pahandle);
@@ -331,6 +329,13 @@ end
 %% PsychtToolbox - closing instances and clearing buffers
 
 Screen('CloseAll');
+
+data.time_dist = curr_time_dist;
+% Informations about session:
+data.info.subject = test_subject;
+data.info.modality = modality_text;
+data.info.duration = interval_type;
+data.info.n_trials = n_trials;
 
 %% Saving Data
 if save_flag
