@@ -115,7 +115,7 @@ if isvisual
     line8 = '\n\n pressing any key after what you think was the time that passed.';
     line9 = '\n\n\n You will be provided feedback on wether your estimation was close enought to the actual time interval.';
     line10 = '\n\n\n A white circle means you were correct, whilst a red circle means you were not good.';
-    line11 = '\n\n The diammeter of the circle is proportional to the absolute time difference of your estimate.';
+    line11 = '\n\n The diameter of the circle is proportional to the absolute time difference of your estimate.';
     
     Endline = '\n\n\n\n Press any key to begin the session. Press again to start each trial.';
     Screen('TextSize', window, 20 );
@@ -185,7 +185,7 @@ else  %If Auditory
     
     line12 = '\n\n\n You will also be given visual feedback.';
     line13 = '\n\n\n A white circle means you were correct, whilst a red circle means you were not good.';
-    line14 = '\n\n The diammeter of the circle is proportional to the absolute time difference of your estimate.';
+    line14 = '\n\n The diameter of the circle is proportional to the absolute time difference of your estimate.';
     Endline = '\n\n\n\n Press any key to begin the session. Press again to start each trial.';
     Screen('TextSize', window, 25 );
     DrawFormattedText(window, [line12 line13 line14 Endline],...
