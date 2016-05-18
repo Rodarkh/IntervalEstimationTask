@@ -1,4 +1,4 @@
-function analysis = analysis_IE_RodV1(task_version, sufix,save_flag)
+function analysis = analysis_IE_RodV1(task_version, experiment, sufix,save_flag)
 %% Loading data and grouping it
 %Path to a folder with all data split in folders called "auditory","visual"...
 %path_folder = 'C:\Users\Rodrigo\Documents\INDP2015\Project\DATA';
@@ -19,14 +19,16 @@ counter=0;
 for i=1:numFiles
     file = load([analysis_folder filesep task_version filesep names{i}]);
     
-    analysis.(file.data.info.duration).estimate(:,i) = file.data.estimate;
-    analysis.(file.data.info.duration).pre_stim(:,i) = file.data.pre_stim;
-    analysis.(file.data.info.duration).time(:,i) = file.data.time;
-    analysis.(file.data.info.duration).trial_time(:,i) = file.data.trial_time;
-    analysis.(file.data.info.duration).correct(:,i) = file.data.correct;
-    analysis.(file.data.info.duration).abs_err(:,i) = file.data.abs_err;
-    analysis.(file.data.info.duration).stim_presentation_time(:,i) = file.data.stim_presentation_time;
-    analysis.(file.data.info.duration).time_dist = file.data.time_dist;
+    if file.data.info.experiment == experiment %Only load if its from the same experiments
+        analysis.(file.data.info.duration).estimate(:,i) = file.data.estimate;
+        analysis.(file.data.info.duration).pre_stim(:,i) = file.data.pre_stim;
+        analysis.(file.data.info.duration).time(:,i) = file.data.time;
+        analysis.(file.data.info.duration).trial_time(:,i) = file.data.trial_time;
+        analysis.(file.data.info.duration).correct(:,i) = file.data.correct;
+        analysis.(file.data.info.duration).abs_err(:,i) = file.data.abs_err;
+        analysis.(file.data.info.duration).stim_presentation_time(:,i) = file.data.stim_presentation_time;
+        analysis.(file.data.info.duration).time_dist = file.data.time_dist;
+    end
 end
 
 %INFO
@@ -82,6 +84,54 @@ for j=2 %durations
 end
 
 
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Sliding Window Analysis
+for j=2 %duration
+    sliding_window=20;
+    for trl=1:n_trials-sliding_window
+        
+        
+        for i=1:n_subjects(j) %subjects
+            for j=2 %durations
+                % Performance analysis
+                analysis.(duration{j}).SW.acc(trl,i) = sum(analysis.(duration{j}).correct(trl:trl+sliding_window,i))/sliding_window;
+                analysis.(duration{j}).SW.error(trl,i) = nanmean(analysis.(duration{j}).estimate(trl:trl+sliding_window,i) - analysis.(duration{j}).trial_time(trl:trl+sliding_window,i));
+                analysis.(duration{j}).SW.trial_tms_beg(trl,i) = nanmean(analysis.(duration{j}).trial_time(1:trl+sliding_window,i));
+                analysis.(duration{j}).SW.trial_tms_curr(trl,i) = nanmean(analysis.(duration{j}).trial_time(trl:trl+sliding_window,i));
+                
+                % Binning data to possible timings
+                for k=1:length(analysis.(duration{j}).time_dist)
+                    analysis.(duration{j}).SW.err_bin{i,k,trl} = analysis.(duration{j}).estimate( analysis.(duration{j}).trial_time(trl:trl+sliding_window,i)==analysis.(file.data.info.duration).time_dist(k) ,i);
+                end
+            end
+        end
+        
+        % Means
+        for j=2 %durations
+            for i=1:n_subjects(j)
+                for k=1:length(analysis.(duration{j}).time_dist)
+                    analysis.(duration{j}).SW.error_m(i,k,trl) = nanmean(analysis.(duration{j}).SW.err_bin{i,k,trl});
+                    analysis.(duration{j}).SW.error_std(i,k,trl) = nanstd(analysis.(duration{j}).SW.err_bin{i,k,trl});
+                end
+            end
+        end        
+           
+        for i=1:n_subjects(j)
+            analysis.(duration{j}).SW.fit_params(i,:,trl) = polyfit(analysis.(duration{j}).time_dist,analysis.(duration{j}).SW.error_m(i,:,trl),1);
+        end
+    end
+    
+    %Population
+    for j=2 %durations
+        analysis.(duration{j}).SW.pop_error_m(:,:) = squeeze(nanmean(analysis.(duration{j}).SW.error_m,1))';
+        analysis.(duration{j}).SW.pop_error_se(:,:) = squeeze(nanstd(analysis.(duration{j}).SW.error_m)/sqrt(n_subjects(j)))';
+              
+        analysis.(duration{j}).SW.pop_fit_params = squeeze(nanmean(analysis.(duration{j}).SW.fit_params,1))';
+        analysis.(duration{j}).SW.pop_fit_params_se = squeeze(nanstd(analysis.(duration{j}).SW.fit_params,1)/sqrt(n_subjects(j)))';
+    end
+    
+end
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plotting
 
 for j=2
@@ -125,7 +175,9 @@ for j=2
 end
 
 % Population
+
 for j=2
+    if n_subjects(j)>1
     figure
     hold on
     errorbar(analysis.(duration{j}).time_dist,analysis.(duration{j}).population.error_m,analysis.(duration{j}).population.error_se,'o')
@@ -139,10 +191,10 @@ for j=2
         saveas(gcf,[figures_folder filesep duration{j} '_EstVStrial_pop', sufix],'png')
         saveas(gcf,[figures_folder filesep duration{j} '_EstVStrial_pop', sufix],'fig')
     end
+    end
 end
 
-
 if save_flag   
-    save([save_folder filesep task_version '_'  duration{j} '_analysis' sufix '.mat'],'analysis')
+    save([save_folder filesep task_version '_'  num2str(experiment) '_analysis' sufix '.mat'],'analysis')
 end
 end
