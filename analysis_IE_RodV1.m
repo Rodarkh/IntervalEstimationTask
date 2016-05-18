@@ -1,5 +1,4 @@
 function analysis = analysis_IE_RodV1(task_version, sufix,save_flag)
-
 %% Loading data and grouping it
 %Path to a folder with all data split in folders called "auditory","visual"...
 %path_folder = 'C:\Users\Rodrigo\Documents\INDP2015\Project\DATA';
@@ -29,6 +28,7 @@ for i=1:numFiles
     analysis.(file.data.info.duration).stim_presentation_time(:,i) = file.data.stim_presentation_time;
     analysis.(file.data.info.duration).time_dist = file.data.time_dist;
 end
+
 %INFO
 analysis.info.modality = file.data.info.modality;
 duration = {'short','long'}; %use this to cycle around 
@@ -36,8 +36,8 @@ n_trials = length(file.data.estimate);
 for j=2 %durations
     n_subjects(j)=size(analysis.(file.data.info.duration).stim_presentation_time,2);
 end
-%% Performance analysis
 
+%% Performance analysis
 for i=1:numFiles %subjects
     for j=2 %durations
         analysis.(duration{j}).acc(1,i) = sum(analysis.(duration{j}).correct(:,i))/n_trials;
@@ -46,8 +46,6 @@ for i=1:numFiles %subjects
 end
 
 %% Binning data to possible timings
-
-
 for j=2
     for i=1:n_subjects(j)
         for k=1:length(analysis.(duration{j}).time_dist)
@@ -55,7 +53,6 @@ for j=2
         end
     end  
 end
-
 
 
 %% Means
