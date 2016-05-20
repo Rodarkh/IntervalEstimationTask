@@ -86,8 +86,8 @@ for j=2 %durations
     end
     
     
-    analysis.(duration{j}).biasRMS(:)=sqrt(sum(analysis.(duration{j}).est_m(:,:).^2,2)/length(analysis.(duration{j}).time_dist));
-    analysis.(duration{j}).VAR(:) = nanmean(analysis.(duration{j}).est_std(:,:),2);
+    analysis.(duration{j}).biasRMS=sqrt(sum(analysis.(duration{j}).est_m(:,:).^2,2)/length(analysis.(duration{j}).time_dist));
+    analysis.(duration{j}).VAR = nanmean(analysis.(duration{j}).est_std(:,:),2);
     
     
     %Population    
@@ -98,11 +98,11 @@ for j=2 %durations
     analysis.(duration{j}).population.acc_bin_se = nanstd( analysis.(duration{j}).acc_bin)/sqrt(n_subjects(j));
     
     
-    analysis.(duration{j}).population.biasRMS_m(:)= nanmean(analysis.(duration{j}).biasRMS) ;
-    analysis.(duration{j}).population.biasRMS_se(:)= nanstd(analysis.(duration{j}).biasRMS) / sqrt(n_subjects(j));
+    analysis.(duration{j}).population.biasRMS_m= nanmean(analysis.(duration{j}).biasRMS) ;
+    analysis.(duration{j}).population.biasRMS_se= nanstd(analysis.(duration{j}).biasRMS) / sqrt(n_subjects(j));
     
-    analysis.(duration{j}).population.VAR_m(:)= nanmean(analysis.(duration{j}).VAR) ;
-    analysis.(duration{j}).population.VAR_se(:)= nanstd(analysis.(duration{j}).VAR) / sqrt(n_subjects(j));
+    analysis.(duration{j}).population.VAR_m= nanmean(analysis.(duration{j}).VAR) ;
+    analysis.(duration{j}).population.VAR_se= nanstd(analysis.(duration{j}).VAR) / sqrt(n_subjects(j));
     
     
     
@@ -240,6 +240,18 @@ for j=2
         saveas(gcf,[figures_folder filesep duration{j} '-' experiment_text{experiment} '_acc_bin',sufix],'png')
         saveas(gcf,[figures_folder filesep duration{j} '-' experiment_text{experiment} '_acc_bin',sufix],'fig')
     end
+    
+    %Bias/Var
+    figure
+    colorss={'ro' ,'bo', 'go', 'ko', 'yo', 'co'};
+    for i=1:n_subjects(j)
+        hold on
+        plot(analysis.(duration{j}).biasRMS(i), sqrt(analysis.(duration{j}).VAR(i)), colorss{i});
+        ylim([0 1]);
+        xlim([0 1]);
+        
+    end
+    
     
     %Accuracy per time interval population
     figure
