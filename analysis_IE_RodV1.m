@@ -51,7 +51,7 @@ end
 for j=2
     for i=1:n_subjects(j)
         for k=1:length(analysis.(duration{j}).time_dist)
-            analysis.(duration{j}).err_bin{i,k} = analysis.(duration{j}).estimate( analysis.(duration{j}).trial_time(:,i)==analysis.(file.data.info.duration).time_dist(k) ,i);
+            analysis.(duration{j}).est_bin{i,k} = analysis.(duration{j}).estimate( analysis.(duration{j}).trial_time(:,i)==analysis.(file.data.info.duration).time_dist(k) ,i);
         end
     end  
 end
@@ -61,22 +61,22 @@ end
 for j=2 %durations
     for i=1:n_subjects(j)
         for k=1:length(analysis.(duration{j}).time_dist)
-            analysis.(duration{j}).error_m(i,k) = mean(analysis.(duration{j}).err_bin{i,k});
-            analysis.(duration{j}).error_std(i,k) = std(analysis.(duration{j}).err_bin{i,k});
+            analysis.(duration{j}).est_m(i,k) = mean(analysis.(duration{j}).est_bin{i,k});
+            analysis.(duration{j}).error_std(i,k) = std(analysis.(duration{j}).est_bin{i,k});
         end
     end
 end
 
 %Population
 for j=2 %durations   
-    analysis.(duration{j}).population.error_m(1,:) = mean(analysis.(duration{j}).error_m,1);
-    analysis.(duration{j}).population.error_se(1,:) = std(analysis.(duration{j}).error_m)/sqrt(n_subjects(j));
+    analysis.(duration{j}).population.est_m(1,:) = mean(analysis.(duration{j}).est_m,1);
+    analysis.(duration{j}).population.error_se(1,:) = std(analysis.(duration{j}).est_m)/sqrt(n_subjects(j));
 end
 
 %% Fitting 
 for j=2 %durations
     for i=1:n_subjects(j)       
-        analysis.(duration{j}).fit_params(i,:) = polyfit(analysis.(duration{j}).time_dist,analysis.(duration{j}).error_m(i,:),1);
+        analysis.(duration{j}).fit_params(i,:) = polyfit(analysis.(duration{j}).time_dist,analysis.(duration{j}).est_m(i,:),1);
     end
     
     analysis.(duration{j}).population.fit_params = mean(analysis.(duration{j}).fit_params,1);
@@ -101,7 +101,7 @@ for j=2 %duration
             
             % Binning data to possible timings
             for k=1:length(analysis.(duration{j}).time_dist)
-                analysis.(duration{j}).SW.err_bin{i,k,trl} = analysis.(duration{j}).estimate( analysis.(duration{j}).trial_time(trl:trl+sliding_window,i)==analysis.(file.data.info.duration).time_dist(k) ,i);
+                analysis.(duration{j}).SW.est_bin{i,k,trl} = analysis.(duration{j}).estimate( analysis.(duration{j}).trial_time(trl:trl+sliding_window,i)==analysis.(file.data.info.duration).time_dist(k) ,i);
             end
             
         end
@@ -109,8 +109,8 @@ for j=2 %duration
         % Means        
         for i=1:n_subjects(j)
             for k=1:length(analysis.(duration{j}).time_dist)
-                analysis.(duration{j}).SW.error_m(i,k,trl) = nanmean(analysis.(duration{j}).SW.err_bin{i,k,trl});
-                analysis.(duration{j}).SW.error_std(i,k,trl) = nanstd(analysis.(duration{j}).SW.err_bin{i,k,trl});
+                analysis.(duration{j}).SW.est_m(i,k,trl) = nanmean(analysis.(duration{j}).SW.est_bin{i,k,trl});
+                analysis.(duration{j}).SW.error_std(i,k,trl) = nanstd(analysis.(duration{j}).SW.est_bin{i,k,trl});
             end
         end
                   
@@ -120,19 +120,19 @@ for j=2 %duration
     
     for i=1:n_subjects(j)
         for trl=1:n_trials-sliding_window
-            if sum( isnan(analysis.(duration{j}).SW.error_m(i,:,trl)) ) == 0
-                analysis.(duration{j}).SW.fit_params(i,:,trl) = polyfit(analysis.(duration{j}).time_dist,analysis.(duration{j}).SW.error_m(i,:,trl),1);
+            if sum( isnan(analysis.(duration{j}).SW.est_m(i,:,trl)) ) == 0
+                analysis.(duration{j}).SW.fit_params(i,:,trl) = polyfit(analysis.(duration{j}).time_dist,analysis.(duration{j}).SW.est_m(i,:,trl),1);
             else
-                non_nans = ~isnan(analysis.(duration{j}).SW.error_m(i,:,trl));
+                non_nans = ~isnan(analysis.(duration{j}).SW.est_m(i,:,trl));
                 x_values=analysis.(duration{j}).time_dist(non_nans);
-                analysis.(duration{j}).SW.fit_params(i,:,trl) = polyfit(x_values,analysis.(duration{j}).SW.error_m(i,non_nans,trl),1);
+                analysis.(duration{j}).SW.fit_params(i,:,trl) = polyfit(x_values,analysis.(duration{j}).SW.est_m(i,non_nans,trl),1);
             end
         end
     end
     
     %Population   
-    analysis.(duration{j}).SW.pop_error_m(:,:) = squeeze(nanmean(analysis.(duration{j}).SW.error_m,1))';
-    analysis.(duration{j}).SW.pop_error_se(:,:) = squeeze(nanstd(analysis.(duration{j}).SW.error_m)/sqrt(n_subjects(j)))';
+    analysis.(duration{j}).SW.pop_est_m(:,:) = squeeze(nanmean(analysis.(duration{j}).SW.est_m,1))';
+    analysis.(duration{j}).SW.pop_error_se(:,:) = squeeze(nanstd(analysis.(duration{j}).SW.est_m)/sqrt(n_subjects(j)))';
     
     analysis.(duration{j}).SW.pop_fit_params = squeeze(nanmean(analysis.(duration{j}).SW.fit_params,1))';
     analysis.(duration{j}).SW.pop_fit_params_se = squeeze(nanstd(analysis.(duration{j}).SW.fit_params,1)/sqrt(n_subjects(j)))';
@@ -168,7 +168,7 @@ for j=2
     for i=1:n_subjects(j)
         subplot(2,round(n_subjects(j)/2),i)
         hold on
-        errorbar(analysis.(duration{j}).time_dist, analysis.(duration{j}).error_m(i,:), analysis.(duration{j}).error_std(i,:),'ro')
+        errorbar(analysis.(duration{j}).time_dist, analysis.(duration{j}).est_m(i,:), analysis.(duration{j}).error_std(i,:),'ro')
         plot(analysis.(duration{j}).time_dist,polyval(analysis.(duration{j}).fit_params(i,:),analysis.(duration{j}).time_dist),'r-','LineWidth',1.5)
         plot([plot_min(j) plot_max(j)],[ plot_min(j) plot_max(j)],'--k','LineWidth',0.5)
         axis([plot_min(j) plot_max(j) plot_min(j) plot_max(j)])
@@ -192,7 +192,7 @@ for j=2
     if n_subjects(j)>1
     figure
     hold on
-    errorbar(analysis.(duration{j}).time_dist,analysis.(duration{j}).population.error_m,analysis.(duration{j}).population.error_se,'o')
+    errorbar(analysis.(duration{j}).time_dist,analysis.(duration{j}).population.est_m,analysis.(duration{j}).population.error_se,'o')
     plot([plot_min(j) plot_max(j)],[ plot_min(j) plot_max(j)],'--k','LineWidth',0.5)
     plot(analysis.(duration{j}).time_dist,polyval(analysis.(duration{j}).population.fit_params,analysis.(duration{j}).time_dist),'b-','LineWidth',1.5)
     axis([plot_min(j) plot_max(j) plot_min(j) plot_max(j)])
@@ -221,7 +221,7 @@ for j=2
             plot(1:n_trials-sliding_window,squeeze(analysis.(duration{j}).SW.fit_params(i,2,:)),'r-')
             xlabel('Trial')
             ylabel('Slope / Bias')
-            ylim([-1 1.5])
+            ylim([-1 1])
             title([task_version '-' duration{j} '-' experiment_text{experiment} ' Subject'])
             legend('Slope','Bias')
             
@@ -253,9 +253,9 @@ for j=2
     %Sliding Window
    figure
     x = analysis.(duration{j}).time_dist;
-    hplot = plot(polyval(analysis.(duration{j}).SW.pop_fit_params(1,:),x));
+    hplot = plot(x,polyval(analysis.(duration{j}).SW.pop_fit_params(1,:),x));
     hold on
-    hplot2 = plot(x,analysis.(duration{j}).SW.pop_error_m(1,:),'o');
+    hplot2 = plot(x,analysis.(duration{j}).SW.pop_est_m(1,:),'o');
     plot([plot_min(j) plot_max(j)],[ plot_min(j) plot_max(j)],'--k','LineWidth',0.5)
     axis([plot_min(j) plot_max(j) plot_min(j) plot_max(j)])
     h = uicontrol('style','slider','units','pixel',...
