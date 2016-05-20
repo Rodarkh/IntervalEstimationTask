@@ -92,44 +92,51 @@ for j=2 %duration
         
         
         for i=1:n_subjects(j) %subjects
-            for j=2 %durations
-                % Performance analysis
-                analysis.(duration{j}).SW.acc(trl,i) = sum(analysis.(duration{j}).correct(trl:trl+sliding_window,i))/sliding_window;
-                analysis.(duration{j}).SW.error(trl,i) = nanmean(analysis.(duration{j}).estimate(trl:trl+sliding_window,i) - analysis.(duration{j}).trial_time(trl:trl+sliding_window,i));
-                analysis.(duration{j}).SW.trial_tms_beg(trl,i) = nanmean(analysis.(duration{j}).trial_time(1:trl+sliding_window,i));
-                analysis.(duration{j}).SW.trial_tms_curr(trl,i) = nanmean(analysis.(duration{j}).trial_time(trl:trl+sliding_window,i));
-                
-                % Binning data to possible timings
-                for k=1:length(analysis.(duration{j}).time_dist)
-                    analysis.(duration{j}).SW.err_bin{i,k,trl} = analysis.(duration{j}).estimate( analysis.(duration{j}).trial_time(trl:trl+sliding_window,i)==analysis.(file.data.info.duration).time_dist(k) ,i);
-                end
+            
+            % Performance analysis
+            analysis.(duration{j}).SW.acc(trl,i) = sum(analysis.(duration{j}).correct(trl:trl+sliding_window,i))/sliding_window;
+            analysis.(duration{j}).SW.error(trl,i) = nanmean(analysis.(duration{j}).estimate(trl:trl+sliding_window,i) - analysis.(duration{j}).trial_time(trl:trl+sliding_window,i));
+            analysis.(duration{j}).SW.trial_tms_beg(trl,i) = nanmean(analysis.(duration{j}).trial_time(1:trl+sliding_window,i));
+            analysis.(duration{j}).SW.trial_tms_curr(trl,i) = nanmean(analysis.(duration{j}).trial_time(trl:trl+sliding_window,i));
+            
+            % Binning data to possible timings
+            for k=1:length(analysis.(duration{j}).time_dist)
+                analysis.(duration{j}).SW.err_bin{i,k,trl} = analysis.(duration{j}).estimate( analysis.(duration{j}).trial_time(trl:trl+sliding_window,i)==analysis.(file.data.info.duration).time_dist(k) ,i);
             end
+            
         end
         
-        % Means
-        for j=2 %durations
-            for i=1:n_subjects(j)
-                for k=1:length(analysis.(duration{j}).time_dist)
-                    analysis.(duration{j}).SW.error_m(i,k,trl) = nanmean(analysis.(duration{j}).SW.err_bin{i,k,trl});
-                    analysis.(duration{j}).SW.error_std(i,k,trl) = nanstd(analysis.(duration{j}).SW.err_bin{i,k,trl});
-                end
-            end
-        end        
-           
+        % Means        
         for i=1:n_subjects(j)
-            analysis.(duration{j}).SW.fit_params(i,:,trl) = polyfit(analysis.(duration{j}).time_dist,analysis.(duration{j}).SW.error_m(i,:,trl),1);
+            for k=1:length(analysis.(duration{j}).time_dist)
+                analysis.(duration{j}).SW.error_m(i,k,trl) = nanmean(analysis.(duration{j}).SW.err_bin{i,k,trl});
+                analysis.(duration{j}).SW.error_std(i,k,trl) = nanstd(analysis.(duration{j}).SW.err_bin{i,k,trl});
+            end
+        end
+                  
+    end
+    
+    
+    
+    for i=1:n_subjects(j)
+        for trl=1:n_trials-sliding_window
+            if sum( isnan(analysis.(duration{j}).SW.error_m(i,:,trl)) ) == 0
+                analysis.(duration{j}).SW.fit_params(i,:,trl) = polyfit(analysis.(duration{j}).time_dist,analysis.(duration{j}).SW.error_m(i,:,trl),1);
+            else
+                non_nans = ~isnan(analysis.(duration{j}).SW.error_m(i,:,trl));
+                x_values=analysis.(duration{j}).time_dist(non_nans);
+                analysis.(duration{j}).SW.fit_params(i,:,trl) = polyfit(x_values,analysis.(duration{j}).SW.error_m(i,non_nans,trl),1);
+            end
         end
     end
     
-    %Population
-    for j=2 %durations
-        analysis.(duration{j}).SW.pop_error_m(:,:) = squeeze(nanmean(analysis.(duration{j}).SW.error_m,1))';
-        analysis.(duration{j}).SW.pop_error_se(:,:) = squeeze(nanstd(analysis.(duration{j}).SW.error_m)/sqrt(n_subjects(j)))';
-              
-        analysis.(duration{j}).SW.pop_fit_params = squeeze(nanmean(analysis.(duration{j}).SW.fit_params,1))';
-        analysis.(duration{j}).SW.pop_fit_params_se = squeeze(nanstd(analysis.(duration{j}).SW.fit_params,1)/sqrt(n_subjects(j)))';
-    end
+    %Population   
+    analysis.(duration{j}).SW.pop_error_m(:,:) = squeeze(nanmean(analysis.(duration{j}).SW.error_m,1))';
+    analysis.(duration{j}).SW.pop_error_se(:,:) = squeeze(nanstd(analysis.(duration{j}).SW.error_m)/sqrt(n_subjects(j)))';
     
+    analysis.(duration{j}).SW.pop_fit_params = squeeze(nanmean(analysis.(duration{j}).SW.fit_params,1))';
+    analysis.(duration{j}).SW.pop_fit_params_se = squeeze(nanstd(analysis.(duration{j}).SW.fit_params,1)/sqrt(n_subjects(j)))';
+       
 end
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plotting
@@ -139,6 +146,7 @@ for j=2
     plot_min(j)=min(analysis.(duration{j}).time_dist)-0.05;
 end
 
+experiment_text = {'Aud to Vis'; 'Vis to Aud'};
 % Saving definitions
 save_folder = 'C:\Users\Rodrigo\Documents\INDP2015\Project\ANALYSIS';
 figures_folder = [save_folder filesep 'Figures' filesep task_version];
@@ -168,6 +176,10 @@ for j=2
         ylabel('Estimated Time(s)')
         set(gca,'XTick',plot_min(j):0.05:plot_max(j))
     end
+    ha = axes('Position',[0 0 1 1],'Xlim',[0 1],'Ylim',[0 1],'Box','off','Visible','off','Units','normalized', 'clipping' , 'off');
+    text(0.5, 1,[task_version '-' duration{j} ' - ' experiment_text{experiment}],'HorizontalAlignment', ...
+    'center','VerticalAlignment', 'top')
+
     if save_flag
         saveas(gcf,[figures_folder filesep duration{j} '_EstVStrial',sufix],'png')
         saveas(gcf,[figures_folder filesep duration{j} '_EstVStrial',sufix],'fig')
@@ -186,6 +198,8 @@ for j=2
     axis([plot_min(j) plot_max(j) plot_min(j) plot_max(j)])
     xlabel('Time Interval(s)')
     ylabel('Estimated Time(s)')
+    title([task_version '-' duration{j} '-' experiment_text{experiment} '- Population'])
+
     set(gca,'XTick',plot_min(j):0.05:plot_max(j))
     if save_flag
         saveas(gcf,[figures_folder filesep duration{j} '_EstVStrial_pop', sufix],'png')
@@ -194,7 +208,67 @@ for j=2
     end
 end
 
+% Plot Sliding window
+for j=2
+    
+    % Individuals
+    if n_subjects(j)>1
+        figure
+        for i=1:n_subjects(j)
+            subplot(2,round(n_subjects(j)/2),i)
+            hold on
+            plot(1:n_trials-sliding_window,squeeze(analysis.(duration{j}).SW.fit_params(i,1,:)),'b-')
+            plot(1:n_trials-sliding_window,squeeze(analysis.(duration{j}).SW.fit_params(i,2,:)),'r-')
+            xlabel('Trial')
+            ylabel('Slope / Bias')
+            ylim([-1 1.5])
+            title([task_version '-' duration{j} '-' experiment_text{experiment} ' Subject'])
+            legend('Slope','Bias')
+            
+        end
+        if save_flag
+            saveas(gcf,[figures_folder filesep duration{j} '_' experiment_text{experiment} '_Slope_time_ind', sufix],'png')
+            saveas(gcf,[figures_folder filesep duration{j} '_' experiment_text{experiment} '_Slope_time_ind', sufix],'fig')
+        end
+    end
+    
+    
+    %Population means
+    figure
+    hold on
+    plot(analysis.(duration{j}).SW.pop_fit_params(:,1),'b-')
+    plot(analysis.(duration{j}).SW.pop_fit_params(:,2),'r-')
+    xlabel('Trial')
+    ylabel('Slope / Bias')
+    title([task_version '-' duration{j} '-' experiment_text{experiment} '- Population'])
+    %     set(gca,'XTick',plot_min(j):0.05:plot_max(j))
+    if save_flag
+        saveas(gcf,[figures_folder filesep duration{j} '_' experiment_text{experiment} '_Slope_time', sufix],'png')
+        saveas(gcf,[figures_folder filesep duration{j} '_' experiment_text{experiment} '_Slope_time', sufix],'fig')
+    end
+    legend('Slope','Bias')
+    
+
+    
+    %Sliding Window
+   figure
+    x = analysis.(duration{j}).time_dist;
+    hplot = plot(polyval(analysis.(duration{j}).SW.pop_fit_params(1,:),x));
+    hold on
+    hplot2 = plot(x,analysis.(duration{j}).SW.pop_error_m(1,:),'o');
+    plot([plot_min(j) plot_max(j)],[ plot_min(j) plot_max(j)],'--k','LineWidth',0.5)
+    axis([plot_min(j) plot_max(j) plot_min(j) plot_max(j)])
+    h = uicontrol('style','slider','units','pixel',...
+                 'min',1,'max',n_trials-sliding_window,'val',1,...
+                 'sliderstep',[1/(n_trials-sliding_window-1) 1], 'position',[50 10 300 20]);
+    addlistener(h,'ActionEvent',@(hObject, event) makeplot(hObject,event,analysis,duration,x,j,hplot,hplot2));
+          
+ 
+end
+
+
 if save_flag   
     save([save_folder filesep task_version '_'  num2str(experiment) '_analysis' sufix '.mat'],'analysis')
 end
 end
+

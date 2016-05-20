@@ -58,6 +58,8 @@ data.correct=false(n_trials, 1);
 data.abs_err = zeros(n_trials,1);
 data.stim_presentation_time = zeros(n_trials,1);
 
+score=0;
+
 %% PsychToolbox initializations
 
 PsychDefaultSetup(2);
@@ -241,11 +243,15 @@ for trl = 1:n_trials
             PsychPortAudio('FillBuffer', pahandle, [incorrectBeep; incorrectBeep]);
             PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
             dotColor = [1 0 0];  % WRONG > 10% error
+            if curr_abs_err <=(0.2*curr_time)
+                score = score + 0.5;
+            end
         else
             PsychPortAudio('FillBuffer', pahandle, [correctBeep; correctBeep]);
             PsychPortAudio('Start', pahandle, repetitions, startCue, waitForDeviceStart);
             dotColor = [1 1 1];  % CORRECT     
             data.correct(trl)= true;
+            score = score + 1;
         end
         
         scale_factor=500;
@@ -294,9 +300,13 @@ for trl = 1:n_trials
         
         if curr_abs_err > error_threshold
             dotColor = [1 0 0];  % WRONG - 10% error
+            if curr_abs_err <=(0.2*curr_time)
+                score = score + 0.5;
+            end
         else
             dotColor = [1 1 1];  % CORRECT
             data.correct(trl)= true;
+            score = score + 1;
         end
         
         
@@ -338,7 +348,9 @@ data.info.modality = modality_text;
 data.info.duration = interval_type;
 data.info.n_trials = n_trials;
 data.info.experiment = experiment;
+data.info.score = score;
 
+fprintf(1,['Congratulations! Your final score was of %f points!'],score)
 %% Saving Data
 if save_flag
     
