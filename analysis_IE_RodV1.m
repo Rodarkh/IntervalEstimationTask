@@ -3,6 +3,8 @@ function analysis = analysis_IE_RodV1(task_version, experiment, sufix,save_flag)
 %Path to a folder with all data split in folders called "auditory","visual"...
 %path_folder = 'C:\Users\Rodrigo\Documents\INDP2015\Project\DATA';
 analysis_folder = 'C:\Users\Rodrigo\Documents\INDP2015\Project\DATA';
+% analysis_folder = '/Users/baylorbrangers/Desktop/Subject_Data_Bayes/Data';
+
 path_data = [analysis_folder filesep task_version filesep , '*.mat'];
 
 % Gets data files to analyze
@@ -40,10 +42,18 @@ for j=2 %durations
 end
 
 %% Performance analysis
-for i=1:numFiles %subjects
-    for j=2 %durations
+for j=2 %durations
+    for i=1:numFiles %subjects
+        
         analysis.(duration{j}).acc(1,i) = sum(analysis.(duration{j}).correct(:,i))/n_trials;
         analysis.(duration{j}).error(:,i) = analysis.(duration{j}).estimate(:,i) - analysis.(duration{j}).trial_time(:,i);
+        
+        for k=1:length(analysis.(duration{j}).time_dist)
+            trials_bins(i,k)= length(analysis.(duration{j}).correct( analysis.(duration{j}).trial_time(:,i)==analysis.(file.data.info.duration).time_dist(k) ,i));
+            correct(i,k)= sum(analysis.(duration{j}).correct( analysis.(duration{j}).trial_time(:,i)==analysis.(file.data.info.duration).time_dist(k) ,i));
+            analysis.(duration{j}).acc_bin(i,k) = correct(i,k) / trials_bins(i,k);
+        end
+        
     end
 end
 
@@ -61,16 +71,19 @@ end
 for j=2 %durations
     for i=1:n_subjects(j)
         for k=1:length(analysis.(duration{j}).time_dist)
-            analysis.(duration{j}).est_m(i,k) = mean(analysis.(duration{j}).est_bin{i,k});
-            analysis.(duration{j}).error_std(i,k) = std(analysis.(duration{j}).est_bin{i,k});
+            analysis.(duration{j}).est_m(i,k) = nanmean(analysis.(duration{j}).est_bin{i,k});
+            analysis.(duration{j}).error_std(i,k) = nanstd(analysis.(duration{j}).est_bin{i,k});
         end
     end
-end
+
 
 %Population
-for j=2 %durations   
-    analysis.(duration{j}).population.est_m(1,:) = mean(analysis.(duration{j}).est_m,1);
-    analysis.(duration{j}).population.error_se(1,:) = std(analysis.(duration{j}).est_m)/sqrt(n_subjects(j));
+ 
+    analysis.(duration{j}).population.est_m(1,:) = nanmean(analysis.(duration{j}).est_m,1);
+    analysis.(duration{j}).population.error_se(1,:) = nanstd(analysis.(duration{j}).est_m)/sqrt(n_subjects(j));
+    
+     analysis.(duration{j}).acc_bin_m = nanmean( analysis.(duration{j}).acc_bin,1);
+     analysis.(duration{j}).acc_bin_se = nanstd( analysis.(duration{j}).acc_bin)/sqrt(n_subjects(j));
 end
 
 %% Fitting 
@@ -164,6 +177,61 @@ end
 %% Plot estimate vs trial time
 %Individuals
 for j=2
+    %Accuracy plot
+    figure
+    for i=1:n_subjects(j)
+        subplot(2,round(n_subjects(j)/2),i)
+        hold on
+        plot(1:n_trials-sliding_window, analysis.(duration{j}).SW.acc(:,i),'g-')
+        xlabel('Trial')
+        ylabel('Accuracy')
+        ylim([0 1])
+    end
+    ha = axes('Position',[0 0 1 1],'Xlim',[0 1],'Ylim',[0 1],'Box','off','Visible','off','Units','normalized', 'clipping' , 'off');
+    text(0.5, 1,[task_version '-' duration{j} ' - ' experiment_text{experiment} '-Accuracy'],'HorizontalAlignment', ...
+    'center','VerticalAlignment', 'top')
+    if save_flag
+        saveas(gcf,[figures_folder filesep duration{j} '-' experiment_text{experiment} '_acc_sw',sufix],'png')
+        saveas(gcf,[figures_folder filesep duration{j} '-' experiment_text{experiment} '_acc_sw',sufix],'fig')
+    end
+    
+    %Accuracy per time interval
+    figure
+    for i=1:n_subjects(j)
+        subplot(2,round(n_subjects(j)/2),i)
+        hold on
+        plot(analysis.(duration{j}).time_dist, analysis.(duration{j}).acc_bin(i,:),'rs-','LineWidth',2)
+        xlabel('Time Interval(s)')
+        ylabel('Accuracy')
+        set(gca,'XTick',plot_min(j):0.05:plot_max(j))
+        ylim([0 1])
+        xlim([plot_min(j) plot_max(j)])
+        
+    end
+    ha = axes('Position',[0 0 1 1],'Xlim',[0 1],'Ylim',[0 1],'Box','off','Visible','off','Units','normalized', 'clipping' , 'off');
+    text(0.5, 1,[task_version '-' duration{j} ' - ' experiment_text{experiment} '-Accuracy'],'HorizontalAlignment', ...
+        'center','VerticalAlignment', 'top')
+    if save_flag
+        saveas(gcf,[figures_folder filesep duration{j} '-' experiment_text{experiment} '_acc_bin',sufix],'png')
+        saveas(gcf,[figures_folder filesep duration{j} '-' experiment_text{experiment} '_acc_bin',sufix],'fig')
+    end
+    
+    %Accuracy per time interval population
+    figure
+    hold on
+    errorbar(analysis.(duration{j}).time_dist,analysis.(duration{j}).acc_bin_m,analysis.(duration{j}).acc_bin_se,'rs-','LineWidth',2)
+    xlabel('Time Interval(s)')
+    ylabel('Accuracy')
+    set(gca,'XTick',plot_min(j):0.05:plot_max(j))
+    ylim([0 1])
+    xlim([plot_min(j) plot_max(j)])
+    title([task_version '-' duration{j} ' - ' experiment_text{experiment} '-Population Accuracy'])
+    if save_flag
+        saveas(gcf,[figures_folder filesep duration{j} '-' experiment_text{experiment} '_acc_bin_pop',sufix],'png')
+        saveas(gcf,[figures_folder filesep duration{j} '-' experiment_text{experiment} '_acc_bin_pop',sufix],'fig')
+    end
+    
+    
     figure
     for i=1:n_subjects(j)
         subplot(2,round(n_subjects(j)/2),i)
@@ -181,8 +249,8 @@ for j=2
     'center','VerticalAlignment', 'top')
 
     if save_flag
-        saveas(gcf,[figures_folder filesep duration{j} '_EstVStrial',sufix],'png')
-        saveas(gcf,[figures_folder filesep duration{j} '_EstVStrial',sufix],'fig')
+        saveas(gcf,[figures_folder filesep duration{j} '-' experiment_text{experiment} '_EstVStrial',sufix],'png')
+        saveas(gcf,[figures_folder filesep duration{j} '-' experiment_text{experiment} '_EstVStrial',sufix],'fig')
     end
 end
 
@@ -202,8 +270,8 @@ for j=2
 
     set(gca,'XTick',plot_min(j):0.05:plot_max(j))
     if save_flag
-        saveas(gcf,[figures_folder filesep duration{j} '_EstVStrial_pop', sufix],'png')
-        saveas(gcf,[figures_folder filesep duration{j} '_EstVStrial_pop', sufix],'fig')
+        saveas(gcf,[figures_folder filesep duration{j} '-' experiment_text{experiment} '_EstVStrial_pop', sufix],'png')
+        saveas(gcf,[figures_folder filesep duration{j} '-' experiment_text{experiment} '_EstVStrial_pop', sufix],'fig')
     end
     end
 end
