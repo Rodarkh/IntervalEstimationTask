@@ -2,8 +2,9 @@ function analysis = analysis_IE_RodV1(task_version, experiment, sufix,save_flag)
 %% Loading data and grouping it
 %Path to a folder with all data split in folders called "auditory","visual"...
 %path_folder = 'C:\Users\Rodrigo\Documents\INDP2015\Project\DATA';
-analysis_folder = 'C:\Users\Rodrigo\Documents\INDP2015\Project\DATA';
-% analysis_folder = '/Users/baylorbrangers/Desktop/Subject_Data_Bayes/Data';
+
+%analysis_folder = 'C:\Users\Rodrigo\Documents\INDP2015\Project\DATA';
+ analysis_folder = '/Users/baylorbrangers/Desktop/Subject_Data_Bayes/Data';
 
 path_data = [analysis_folder filesep task_version filesep , '*.mat'];
 
@@ -43,16 +44,23 @@ end
 
 %% Performance analysis
 for j=2 %durations
+    
     for i=1:numFiles %subjects
         
         analysis.(duration{j}).acc(1,i) = sum(analysis.(duration{j}).correct(:,i))/n_trials;
-        analysis.(duration{j}).error(:,i) = analysis.(duration{j}).estimate(:,i) - analysis.(duration{j}).trial_time(:,i);
+        analysis.(duration{j}).bias(:,i) = analysis.(duration{j}).estimate(:,i) - analysis.(duration{j}).trial_time(:,i);
+   
         
         for k=1:length(analysis.(duration{j}).time_dist)
             trials_bins(i,k)= length(analysis.(duration{j}).correct( analysis.(duration{j}).trial_time(:,i)==analysis.(file.data.info.duration).time_dist(k) ,i));
             correct(i,k)= sum(analysis.(duration{j}).correct( analysis.(duration{j}).trial_time(:,i)==analysis.(file.data.info.duration).time_dist(k) ,i));
             analysis.(duration{j}).acc_bin(i,k) = correct(i,k) / trials_bins(i,k);
+
         end
+        
+        
+        
+        
         
     end
 end
@@ -61,9 +69,10 @@ end
 for j=2
     for i=1:n_subjects(j)
         for k=1:length(analysis.(duration{j}).time_dist)
-            analysis.(duration{j}).est_bin{i,k} = analysis.(duration{j}).estimate( analysis.(duration{j}).trial_time(:,i)==analysis.(file.data.info.duration).time_dist(k) ,i);
-        end
+            analysis.(duration{j}).est_bin{i,k} = analysis.(duration{j}).estimate( analysis.(duration{j}).trial_time(:,i)==analysis.(file.data.info.duration).time_dist(k) ,i); 
+        end       
     end  
+
 end
 
 
@@ -72,19 +81,33 @@ for j=2 %durations
     for i=1:n_subjects(j)
         for k=1:length(analysis.(duration{j}).time_dist)
             analysis.(duration{j}).est_m(i,k) = nanmean(analysis.(duration{j}).est_bin{i,k});
-            analysis.(duration{j}).error_std(i,k) = nanstd(analysis.(duration{j}).est_bin{i,k});
+            analysis.(duration{j}).est_std(i,k) = nanstd(analysis.(duration{j}).est_bin{i,k});
         end
     end
-
-
-%Population
- 
+    
+    
+    analysis.(duration{j}).biasRMS(:)=sqrt(sum(analysis.(duration{j}).est_m(:,:).^2,2)/length(analysis.(duration{j}).time_dist));
+    analysis.(duration{j}).VAR(:) = nanmean(analysis.(duration{j}).est_std(:,:),2);
+    
+    
+    %Population    
     analysis.(duration{j}).population.est_m(1,:) = nanmean(analysis.(duration{j}).est_m,1);
     analysis.(duration{j}).population.error_se(1,:) = nanstd(analysis.(duration{j}).est_m)/sqrt(n_subjects(j));
     
-     analysis.(duration{j}).acc_bin_m = nanmean( analysis.(duration{j}).acc_bin,1);
-     analysis.(duration{j}).acc_bin_se = nanstd( analysis.(duration{j}).acc_bin)/sqrt(n_subjects(j));
+    analysis.(duration{j}).population.acc_bin_m = nanmean( analysis.(duration{j}).acc_bin,1);
+    analysis.(duration{j}).population.acc_bin_se = nanstd( analysis.(duration{j}).acc_bin)/sqrt(n_subjects(j));
+    
+    
+    analysis.(duration{j}).population.biasRMS_m(:)= nanmean(analysis.(duration{j}).biasRMS) ;
+    analysis.(duration{j}).population.biasRMS_se(:)= nanstd(analysis.(duration{j}).biasRMS) / sqrt(n_subjects(j));
+    
+    analysis.(duration{j}).population.VAR_m(:)= nanmean(analysis.(duration{j}).VAR) ;
+    analysis.(duration{j}).population.VAR_se(:)= nanstd(analysis.(duration{j}).VAR) / sqrt(n_subjects(j));
+    
+    
+    
 end
+
 
 %% Fitting 
 for j=2 %durations
@@ -176,6 +199,8 @@ end
 
 %% Plot estimate vs trial time
 %Individuals
+
+
 for j=2
     %Accuracy plot
     figure
@@ -219,7 +244,7 @@ for j=2
     %Accuracy per time interval population
     figure
     hold on
-    errorbar(analysis.(duration{j}).time_dist,analysis.(duration{j}).acc_bin_m,analysis.(duration{j}).acc_bin_se,'rs-','LineWidth',2)
+    errorbar(analysis.(duration{j}).time_dist,analysis.(duration{j}).population.acc_bin_m,analysis.(duration{j}).population.acc_bin_se,'rs-','LineWidth',2)
     xlabel('Time Interval(s)')
     ylabel('Accuracy')
     set(gca,'XTick',plot_min(j):0.05:plot_max(j))

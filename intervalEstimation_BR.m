@@ -1,8 +1,13 @@
 
+
 function data = intervalEstimation_BR(modality, interval_type,test_subject, n_trials, experiment, save_path, save_flag)
+
+
+
 
 %% Help
 % modality='auditory' or 'visual';  defines what modality the task will
+% data = intervalEstimation_BR('auditory', 'long','bb', 3,'/Users/baylorbrangers/Desktop', 1)
 % run.
 % experiment = 1 or 2 - 1 means auditory first; 2 means visual first
 % data = intervalEstimation_BR('visual','long','rod_test_1',100,1,'C:\Users\Rodrigo\Documents\INDP2015\Project\DATA',1)
