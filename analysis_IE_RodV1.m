@@ -98,11 +98,11 @@ for j=2 %durations
     analysis.(duration{j}).population.error_se(1,:) = nanstd(analysis.(duration{j}).est_m)/sqrt(n_subjects(j));
     
     analysis.(duration{j}).population.acc_bin_m = nanmean( analysis.(duration{j}).acc_bin,1);
-    analysis.(duration{j}).population.acc_bin_se = nanstd( analysis.(duration{j}).acc_bin)/sqrt(n_subjects(j));
+    analysis.(duration{j}).population.acc_bin_se = nanstd( analysis.(duration{j}).acc_bin,1,1)/sqrt(n_subjects(j));
     
     
     analysis.(duration{j}).population.biasRMS_m= nanmean(analysis.(duration{j}).biasRMS) ;
-    analysis.(duration{j}).population.biasRMS_se= nanstd(analysis.(duration{j}).biasRMS) / sqrt(n_subjects(j));
+    analysis.(duration{j}).population.biasRMS_se= nanstd(analysis.(duration{j}).biasRMS,1,1) / sqrt(n_subjects(j));
     
     analysis.(duration{j}).population.VAR_m= nanmean(analysis.(duration{j}).VAR) ;
     analysis.(duration{j}).population.VAR_se= nanstd(analysis.(duration{j}).VAR) / sqrt(n_subjects(j));
@@ -234,6 +234,7 @@ for j=2
         set(gca,'XTick',plot_min(j):0.05:plot_max(j))
         ylim([0 1])
         xlim([plot_min(j) plot_max(j)])
+       
         
     end
     ha = axes('Position',[0 0 1 1],'Xlim',[0 1],'Ylim',[0 1],'Box','off','Visible','off','Units','normalized', 'clipping' , 'off');
