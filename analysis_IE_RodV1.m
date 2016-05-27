@@ -3,8 +3,8 @@ function analysis = analysis_IE_RodV1(task_version, experiment, sufix,save_flag)
 %Path to a folder with all data split in folders called "auditory","visual"...
 %path_folder = 'C:\Users\Rodrigo\Documents\INDP2015\Project\DATA';
 
-%analysis_folder = 'C:\Users\Rodrigo\Documents\INDP2015\Project\DATA';
- analysis_folder = '/Users/baylorbrangers/Desktop/Subject_Data_Bayes/Data';
+analysis_folder = 'C:\Users\Rodrigo\Documents\INDP2015\Project\DATA';
+%  analysis_folder = '/Users/baylorbrangers/Desktop/Subject_Data_Bayes/Data';
 
 path_data = [analysis_folder filesep task_version filesep , '*.mat'];
 
@@ -31,11 +31,14 @@ for i=1:numFiles
         analysis.(file.data.info.duration).abs_err(:,i) = file.data.abs_err;
         analysis.(file.data.info.duration).stim_presentation_time(:,i) = file.data.stim_presentation_time;
         analysis.(file.data.info.duration).time_dist = file.data.time_dist;
+        analysis.(file.data.info.duration).score.(file.data.info.subject) = file.data.info.score;
+        
     end
 end
 
 %INFO
 analysis.info.modality = file.data.info.modality;
+analysis.info.experiment = experiment;
 duration = {'short','long'}; %use this to cycle around 
 n_trials = length(file.data.estimate);
 for j=2 %durations
@@ -273,7 +276,7 @@ for j=2
     for i=1:n_subjects(j)
         subplot(2,round(n_subjects(j)/2),i)
         hold on
-        errorbar(analysis.(duration{j}).time_dist, analysis.(duration{j}).est_m(i,:), analysis.(duration{j}).error_std(i,:),'ro')
+        errorbar(analysis.(duration{j}).time_dist, analysis.(duration{j}).est_m(i,:), analysis.(duration{j}).est_std(i,:),'ro')
         plot(analysis.(duration{j}).time_dist,polyval(analysis.(duration{j}).fit_params(i,:),analysis.(duration{j}).time_dist),'r-','LineWidth',1.5)
         plot([plot_min(j) plot_max(j)],[ plot_min(j) plot_max(j)],'--k','LineWidth',0.5)
         axis([plot_min(j) plot_max(j) plot_min(j) plot_max(j)])
