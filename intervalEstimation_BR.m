@@ -1,9 +1,4 @@
-
-
 function data = intervalEstimation_BR(modality, interval_type,test_subject, n_trials, experiment, save_path, save_flag)
-
-
-
 
 %% Help
 % modality='auditory' or 'visual';  defines what modality the task will

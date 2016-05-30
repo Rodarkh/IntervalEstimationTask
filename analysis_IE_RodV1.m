@@ -60,13 +60,49 @@ for j=2 %durations
             analysis.(duration{j}).acc_bin(i,k) = correct(i,k) / trials_bins(i,k);
 
         end
-        
-        
-        
-        
+            
         
     end
 end
+
+%% Pre stim analysis
+
+bin_vector=[-inf 0.95 1.05 +inf];
+[pre_stim_times pre_stim_bins]=histc(analysis.long.pre_stim(:,:),bin_vector);
+figure
+bar(pre_stim_times)
+
+for j=2
+    analysis.(duration{j}).pre_stim_b=false(n_trials,n_subjects(j),max(max(pre_stim_bins)));
+    for bin=1:max(max(pre_stim_bins))
+        for i=1:n_subjects(j)
+            analysis.(duration{j}).pre_stim_b.bins(pre_stim_bins(:,i)==bin,i,bin) = true;
+        end
+    end
+    
+    analysis.(duration{j}).pre_stim_b.n_trials = sum(analysis.(duration{j}).pre_stim_b.bins);
+    
+    analysis.(duration{j}).pre_stim_b.acc = zeros(1,n_subjects(j),max(max(pre_stim_bins)));
+    
+    analysis.(duration{j}).pre_stim_b.bias= cell(max(max(pre_stim_bins)),n_subjects(j));
+    
+    for bin=1:max(max(pre_stim_bins))
+        for i= 1:n_subjects(j)
+            analysis.(duration{j}).pre_stim_b.acc(1,i,bin) = sum(analysis.(duration{j}).correct( analysis.(duration{j}).pre_stim_b.bins(:,i,bin),i ))/analysis.(duration{j}).pre_stim_b.n_trials(1,i,bin);
+            analysis.(duration{j}).pre_stim_b.bias{bin,i} = analysis.(duration{j}).estimate(analysis.(duration{j}).pre_stim_b.bins(:,i,bin),i) - analysis.(duration{j}).trial_time(analysis.(duration{j}).pre_stim_b.bins(:,i,bin),i);
+        end
+    end
+%     
+%     for k=1:length(analysis.(duration{j}).time_dist)
+%         trials_bins(i,k)= length(analysis.(duration{j}).correct( analysis.(duration{j}).trial_time(:,i)==analysis.(file.data.info.duration).time_dist(k) ,i));
+%         correct(i,k)= sum(analysis.(duration{j}).correct( analysis.(duration{j}).trial_time(:,i)==analysis.(file.data.info.duration).time_dist(k) ,i));
+%         analysis.(duration{j}).acc_bin(i,k) = correct(i,k) / trials_bins(i,k);
+%         
+%     end
+    
+    
+end
+
 
 %% Binning data to possible timings
 for j=2
