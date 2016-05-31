@@ -92,15 +92,28 @@ for j=2
             analysis.(duration{j}).pre_stim_b.bias{bin,i} = analysis.(duration{j}).estimate(analysis.(duration{j}).pre_stim_b.bins(:,i,bin),i) - analysis.(duration{j}).trial_time(analysis.(duration{j}).pre_stim_b.bins(:,i,bin),i);
         end
     end
-%     
-%     for k=1:length(analysis.(duration{j}).time_dist)
-%         trials_bins(i,k)= length(analysis.(duration{j}).correct( analysis.(duration{j}).trial_time(:,i)==analysis.(file.data.info.duration).time_dist(k) ,i));
-%         correct(i,k)= sum(analysis.(duration{j}).correct( analysis.(duration{j}).trial_time(:,i)==analysis.(file.data.info.duration).time_dist(k) ,i));
-%         analysis.(duration{j}).acc_bin(i,k) = correct(i,k) / trials_bins(i,k);
-%         
-%     end
     
     
+    for bin=1:max(max(pre_stim_bins))
+        for i= 1:n_subjects(j)
+            for k=1:length(analysis.(duration{j}).time_dist)
+                trials_bins(i,k,bin)= length(analysis.(duration{j}).correct( analysis.(duration{j}).trial_time(analysis.(duration{j}).pre_stim_b.bins(:,i,bin),i)==analysis.(file.data.info.duration).time_dist(k) ,i));
+                correct(i,k,bin)= sum(analysis.(duration{j}).correct( analysis.(duration{j}).trial_time(analysis.(duration{j}).pre_stim_b.bins(:,i,bin),i)==analysis.(file.data.info.duration).time_dist(k) ,i));
+                analysis.(duration{j}).pre_stim_b.acc_bin(i,k,bin) = correct(i,k,bin) / trials_bins(i,k,bin);
+                
+            end
+        end
+    end
+    
+    
+    
+    for bin=1:max(max(pre_stim_bins))
+        for i=1:n_subjects(j)
+            for k=1:length(analysis.(duration{j}).time_dist)
+                analysis.(duration{j}).pre_stim_b.est_bin{i,k,bin} = analysis.(duration{j}).estimate( analysis.(duration{j}).trial_time(analysis.(duration{j}).pre_stim_b.bins(:,i,bin),i)==analysis.(file.data.info.duration).time_dist(k) ,i);
+            end
+        end
+    end
 end
 
 
@@ -108,10 +121,9 @@ end
 for j=2
     for i=1:n_subjects(j)
         for k=1:length(analysis.(duration{j}).time_dist)
-            analysis.(duration{j}).est_bin{i,k} = analysis.(duration{j}).estimate( analysis.(duration{j}).trial_time(:,i)==analysis.(file.data.info.duration).time_dist(k) ,i); 
-        end       
+            analysis.(duration{j}).est_bin{i,k,bin} = analysis.(duration{j}).estimate( analysis.(duration{j}).trial_time(:,i)==analysis.(file.data.info.duration).time_dist(k) ,i);
+        end
     end  
-
 end
 
 
@@ -142,9 +154,7 @@ for j=2 %durations
     
     analysis.(duration{j}).population.VAR_m= nanmean(analysis.(duration{j}).VAR) ;
     analysis.(duration{j}).population.VAR_se= nanstd(analysis.(duration{j}).VAR) / sqrt(n_subjects(j));
-    
-    
-    
+      
 end
 
 
