@@ -39,6 +39,9 @@ end
 %INFO
 analysis.info.modality = file.data.info.modality;
 analysis.info.experiment = experiment;
+if experiment==3
+    analysis.info.sufix = file.data.info.sufix;
+end
 duration = {'short','long'}; %use this to cycle around 
 n_trials = length(file.data.estimate);
 for j=2 %durations
@@ -240,7 +243,7 @@ for j=2
     plot_min(j)=min(analysis.(duration{j}).time_dist)-0.05;
 end
 
-experiment_text = {'Aud to Vis'; 'Vis to Aud'};
+experiment_text = {'Aud to Vis'; 'Vis to Aud'; 'Vis to Vis'};
 % Saving definitions
 save_folder = 'C:\Users\Rodrigo\Documents\INDP2015\Project\ANALYSIS';
 figures_folder = [save_folder filesep 'Figures' filesep task_version];
