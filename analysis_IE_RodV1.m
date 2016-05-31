@@ -76,7 +76,7 @@ for j=2
     analysis.(duration{j}).pre_stim_b=false(n_trials,n_subjects(j),max(max(pre_stim_bins)));
     for bin=1:max(max(pre_stim_bins))
         for i=1:n_subjects(j)
-            analysis.(duration{j}).pre_stim_b.bins(pre_stim_bins(:,i)==bin,i,bin) = true;
+            analysis.(duration{j}).pre_stim_b.bins(:,i,bin) = (pre_stim_bins(:,i)==bin);
         end
     end
     
@@ -90,30 +90,23 @@ for j=2
         for i= 1:n_subjects(j)
             analysis.(duration{j}).pre_stim_b.acc(1,i,bin) = sum(analysis.(duration{j}).correct( analysis.(duration{j}).pre_stim_b.bins(:,i,bin),i ))/analysis.(duration{j}).pre_stim_b.n_trials(1,i,bin);
             analysis.(duration{j}).pre_stim_b.bias{bin,i} = analysis.(duration{j}).estimate(analysis.(duration{j}).pre_stim_b.bins(:,i,bin),i) - analysis.(duration{j}).trial_time(analysis.(duration{j}).pre_stim_b.bins(:,i,bin),i);
+            analysis.(duration{j}).pre_stim_b.estimate{bin,i} = analysis.(duration{j}).estimate(analysis.(duration{j}).pre_stim_b.bins(:,i,bin),i);
         end
     end
     
-    
+    analysis.(duration{j}).pre_stim_b.est_bin{i,k,bin} = cell(max(max(pre_stim_bins)),n_subjects(j));
     for bin=1:max(max(pre_stim_bins))
         for i= 1:n_subjects(j)
             for k=1:length(analysis.(duration{j}).time_dist)
                 trials_bins(i,k,bin)= length(analysis.(duration{j}).correct( analysis.(duration{j}).trial_time(analysis.(duration{j}).pre_stim_b.bins(:,i,bin),i)==analysis.(file.data.info.duration).time_dist(k) ,i));
                 correct(i,k,bin)= sum(analysis.(duration{j}).correct( analysis.(duration{j}).trial_time(analysis.(duration{j}).pre_stim_b.bins(:,i,bin),i)==analysis.(file.data.info.duration).time_dist(k) ,i));
                 analysis.(duration{j}).pre_stim_b.acc_bin(i,k,bin) = correct(i,k,bin) / trials_bins(i,k,bin);
-                
+                analysis.(duration{j}).pre_stim_b.est_bin{i,k,bin} = analysis.(duration{j}).pre_stim_b.estimate{bin,i}( analysis.(duration{j}).trial_time(analysis.(duration{j}).pre_stim_b.bins(:,i,bin),i)==analysis.(file.data.info.duration).time_dist(k));
+
             end
         end
     end
     
-    
-    
-    for bin=1:max(max(pre_stim_bins))
-        for i=1:n_subjects(j)
-            for k=1:length(analysis.(duration{j}).time_dist)
-                analysis.(duration{j}).pre_stim_b.est_bin{i,k,bin} = analysis.(duration{j}).estimate( analysis.(duration{j}).trial_time(analysis.(duration{j}).pre_stim_b.bins(:,i,bin),i)==analysis.(file.data.info.duration).time_dist(k) ,i);
-            end
-        end
-    end
 end
 
 
@@ -121,7 +114,7 @@ end
 for j=2
     for i=1:n_subjects(j)
         for k=1:length(analysis.(duration{j}).time_dist)
-            analysis.(duration{j}).est_bin{i,k,bin} = analysis.(duration{j}).estimate( analysis.(duration{j}).trial_time(:,i)==analysis.(file.data.info.duration).time_dist(k) ,i);
+            analysis.(duration{j}).est_bin{i,k} = analysis.(duration{j}).estimate( analysis.(duration{j}).trial_time(:,i)==analysis.(file.data.info.duration).time_dist(k) ,i);
         end
     end  
 end
@@ -132,9 +125,17 @@ for j=2 %durations
     for i=1:n_subjects(j)
         for k=1:length(analysis.(duration{j}).time_dist)
             analysis.(duration{j}).est_m(i,k) = nanmean(analysis.(duration{j}).est_bin{i,k});
+            for bin=1:max(max(pre_stim_bins))
+                 analysis.(duration{j}).pre_stim_b.est_bin_m(i,k,bin)=nanmean(analysis.(duration{j}).pre_stim_b.est_bin{i,k,bin});
+            end
+          
             analysis.(duration{j}).est_std(i,k) = nanstd(analysis.(duration{j}).est_bin{i,k});
         end
     end
+    
+    
+    analysis.(duration{j}).pre_stim_b.pop_est_bin_m = nanmean( analysis.(duration{j}).pre_stim_b.est_bin_m) ;
+    analysis.(duration{j}).pre_stim_b.pop_est_bin_se = nanstd( analysis.(duration{j}).pre_stim_b.est_bin_m,1,1)/sqrt(n_subjects(j)) ;
     
     
     analysis.(duration{j}).biasRMS=sqrt(sum(analysis.(duration{j}).est_m(:,:).^2,2)/length(analysis.(duration{j}).time_dist));
@@ -158,14 +159,22 @@ for j=2 %durations
 end
 
 
-%% Fitting 
+%% Fitting
 for j=2 %durations
-    for i=1:n_subjects(j)       
+    for i=1:n_subjects(j)
         analysis.(duration{j}).fit_params(i,:) = polyfit(analysis.(duration{j}).time_dist,analysis.(duration{j}).est_m(i,:),1);
+        for bin=1:max(max(pre_stim_bins))
+            analysis.(duration{j}).pre_stim_b.fit_params(i,:,bin) = polyfit(analysis.(duration{j}).time_dist,analysis.(duration{j}).pre_stim_b.est_bin_m(i,:,bin),1);
+        end
     end
     
     analysis.(duration{j}).population.fit_params = mean(analysis.(duration{j}).fit_params,1);
     analysis.(duration{j}).population.fit_params_se = std(analysis.(duration{j}).fit_params,1)/sqrt(n_subjects(j));
+    
+    for bin=1:max(max(pre_stim_bins))
+        analysis.(duration{j}).pre_stim_b.fit_params_m = nanmean(analysis.(duration{j}).pre_stim_b.fit_params,1);
+        analysis.(duration{j}).pre_stim_b.fit_params_se = nanstd(analysis.(duration{j}).pre_stim_b.fit_params,1)/sqrt(n_subjects(j));
+    end
 end
 
 
@@ -362,6 +371,32 @@ for j=2
     end
     end
 end
+
+% Population with ITI prestim analysis
+for j=2
+    if n_subjects(j)>1
+    figure
+    hold on
+    errorbar(analysis.(duration{j}).time_dist,analysis.(duration{j}).pre_stim_b.pop_est_bin_m(:,:,1),analysis.(duration{j}).pre_stim_b.pop_est_bin_se(:,:,1),'bo')
+    errorbar(analysis.(duration{j}).time_dist,analysis.(duration{j}).pre_stim_b.pop_est_bin_m(:,:,2),analysis.(duration{j}).pre_stim_b.pop_est_bin_se(:,:,2),'ro')
+    errorbar(analysis.(duration{j}).time_dist,analysis.(duration{j}).pre_stim_b.pop_est_bin_m(:,:,3),analysis.(duration{j}).pre_stim_b.pop_est_bin_se(:,:,3),'go')
+    plot([plot_min(j) plot_max(j)],[ plot_min(j) plot_max(j)],'--k','LineWidth',0.5)
+    plot(analysis.(duration{j}).time_dist,polyval(analysis.(duration{j}).pre_stim_b.fit_params_m(:,:,1),analysis.(duration{j}).time_dist),'b-','LineWidth',1.5)
+    plot(analysis.(duration{j}).time_dist,polyval(analysis.(duration{j}).pre_stim_b.fit_params_m(:,:,2),analysis.(duration{j}).time_dist),'r-','LineWidth',1.5) 
+    plot(analysis.(duration{j}).time_dist,polyval(analysis.(duration{j}).pre_stim_b.fit_params_m(:,:,3),analysis.(duration{j}).time_dist),'g-','LineWidth',1.5)
+    axis([plot_min(j) plot_max(j) plot_min(j) plot_max(j)])
+    xlabel('Time Interval(s)')
+    ylabel('Estimated Time(s)')
+    title([task_version '-' duration{j} '-' experiment_text{experiment} '- Population'])
+
+    set(gca,'XTick',plot_min(j):0.05:plot_max(j))
+    if save_flag
+        saveas(gcf,[figures_folder filesep duration{j} '-' experiment_text{experiment} 'ITI_EstVStrial_pop', sufix],'png')
+        saveas(gcf,[figures_folder filesep duration{j} '-' experiment_text{experiment} 'ITI_EstVStrial_pop', sufix],'fig')
+    end
+    end
+end
+
 
 % Plot Sliding window
 for j=2
